@@ -35,6 +35,7 @@ class Api_Controller extends REST_Controller
 
         parent::__construct();
         $this->load->library('session');
+        $this->load->library('notification_lib');
         $this->load->library('form_validation');
         $this->load->model('setting_m');
         $this->load->model("site_m");

@@ -11,12 +11,48 @@ class Notice extends Api_Controller
         parent::__construct();
         $this->load->model('notice_m');
         $this->load->model("alert_m");
+        $this->load->model('studentrelation_m');
     }
 
     public function index_get()
     {
         $schoolyearID = $this->session->userdata("defaultschoolyearID");
-        $this->retdata['notices'] = $this->notice_m->get_order_by_notice(array('schoolyearID' => $schoolyearID));
+        $notices = $this->notice_m->get_order_by_notice(array('schoolyearID' => $schoolyearID));
+
+        // Class-wise notices (classesID set) only reach that class's students/parents;
+        // "All Classes" notices (classesID null/0) reach everyone, same as before.
+        $usertypeID = $this->session->userdata('usertypeID');
+        if (($usertypeID == 3 || $usertypeID == 4) && customCompute($notices)) {
+            $myClassesID = 0;
+            if ($usertypeID == 3) {
+                $student = $this->studentrelation_m->get_single_student(array(
+                    'srstudentID' => $this->session->userdata('loginuserID'),
+                    'srschoolyearID' => $schoolyearID,
+                ));
+                $myClassesID = customCompute($student) ? $student->srclassesID : 0;
+            } else {
+                // Parent: match if ANY of their children is in the notice's class.
+                // get_order_by_student() already scopes results to this parent's own
+                // children automatically (via Studentrelation_m::userRelation()) when
+                // called in a parent session — no explicit parentID filter needed (there
+                // isn't one to filter on: parentID lives on `student`, not `studentrelation`).
+                $children = $this->studentrelation_m->get_order_by_student(array(
+                    'srschoolyearID' => $schoolyearID,
+                ));
+                $myClassesIDs = customCompute($children) ? pluck($children, 'srclassesID') : [];
+            }
+
+            $notices = array_values(array_filter($notices, function($notice) use ($usertypeID, $myClassesID, $myClassesIDs) {
+                if (empty($notice->classesID)) {
+                    return true; // All Classes
+                }
+                return $usertypeID == 3
+                    ? $notice->classesID == $myClassesID
+                    : in_array($notice->classesID, $myClassesIDs ?? []);
+            }));
+        }
+
+        $this->retdata['notices'] = $notices;
 
         $this->response([
             'status'    => true,

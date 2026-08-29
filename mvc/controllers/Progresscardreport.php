@@ -439,10 +439,9 @@ class Progresscardreport extends Admin_Controller
 	public function getStudent()
 	{
 		$classesID = $this->input->post('classesID');
-		$sectionID = $this->input->post('sectionID');
 		$schoolyearID = $this->session->userdata('defaultschoolyearID');
-		if ((int)$classesID && (int)$sectionID) {
-			$students = $this->studentrelation_m->general_get_order_by_student(array('srclassesID' => $classesID, 'srsectionID' => $sectionID, 'srschoolyearID' => $schoolyearID));
+		if ((int)$classesID) {
+			$students = $this->studentrelation_m->general_get_order_by_student(array('srclassesID' => $classesID, 'srschoolyearID' => $schoolyearID));
 			if (customCompute($students)) {
 				echo "<option value='0'>" . $this->lang->line("progresscardreport_please_select") . "</option>";
 				foreach ($students as $student) {

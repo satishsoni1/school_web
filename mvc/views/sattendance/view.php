@@ -103,7 +103,9 @@
                                                                                 $d = sprintf('%02d',$i);
 
                                                                                 $date = $d."-".$month."-".$yearKey;
-                                                                                if(in_array($date, $holidaysArray)) {
+                                                                                if(customCompute($student->admission_date) && strtotime($date) < strtotime($student->admission_date)) {
+                                                                                    echo "<td class='ini-bg-secondary'>".'-'."</td>";
+                                                                                } elseif(in_array($date, $holidaysArray)) {
                                                                                     $holidayCount++;
                                                                                     echo "<td class='ini-bg-primary'>".'H'."</td>";
                                                                                 } elseif (in_array($date, $getWeekendDays)) {
@@ -150,7 +152,9 @@
                                                                                 $d = sprintf('%02d',$i);
 
                                                                                 $date = $d."-".$month."-".$yearKey;
-                                                                                if(in_array($date, $holidaysArray)) {
+                                                                                if(customCompute($student->admission_date) && strtotime($date) < strtotime($student->admission_date)) {
+                                                                                    echo "<td class='ini-bg-secondary'>".'-'."</td>";
+                                                                                } elseif(in_array($date, $holidaysArray)) {
                                                                                     $holidayCount++;
                                                                                     echo "<td class='ini-bg-primary'>".'H'."</td>";
                                                                                 } elseif (in_array($date, $getWeekendDays)) {
@@ -223,7 +227,9 @@
                                                                                 $d = sprintf('%02d',$i);
 
                                                                                 $date = $d."-".$month."-".$yearKey;
-                                                                                if(in_array($date, $holidaysArray)) {
+                                                                                if(customCompute($student->admission_date) && strtotime($date) < strtotime($student->admission_date)) {
+                                                                                    echo "<td class='ini-bg-secondary'>".'-'."</td>";
+                                                                                } elseif(in_array($date, $holidaysArray)) {
                                                                                     $holidayCount++;
                                                                                     echo "<td class='ini-bg-primary'>".'H'."</td>";
                                                                                 } elseif (in_array($date, $getWeekendDays)) {
@@ -270,7 +276,9 @@
                                                                                 $d = sprintf('%02d',$i);
 
                                                                                 $date = $d."-".$month."-".$yearKey;
-                                                                                if(in_array($date, $holidaysArray)) {
+                                                                                if(customCompute($student->admission_date) && strtotime($date) < strtotime($student->admission_date)) {
+                                                                                    echo "<td class='ini-bg-secondary'>".'-'."</td>";
+                                                                                } elseif(in_array($date, $holidaysArray)) {
                                                                                     $holidayCount++;
                                                                                     echo "<td class='ini-bg-primary'>".'H'."</td>";
                                                                                 } elseif (in_array($date, $getWeekendDays)) {
@@ -348,7 +356,9 @@
                                                                         $d = sprintf('%02d',$i);
 
                                                                         $date = $d."-".$month."-".$yearKey;
-                                                                        if(in_array($date, $holidaysArray)) {
+                                                                        if(customCompute($student->admission_date) && strtotime($date) < strtotime($student->admission_date)) {
+                                                                            echo "<td class='ini-bg-secondary'>".'-'."</td>";
+                                                                        } elseif(in_array($date, $holidaysArray)) {
                                                                             $holidayCount++;
                                                                             echo "<td class='ini-bg-primary'>".'H'."</td>";
                                                                         } elseif (in_array($date, $getWeekendDays)) {
@@ -396,7 +406,9 @@
                                                                         $d = sprintf('%02d',$i);
 
                                                                         $date = $d."-".$month."-".$yearKey;
-                                                                        if(in_array($date, $holidaysArray)) {
+                                                                        if(customCompute($student->admission_date) && strtotime($date) < strtotime($student->admission_date)) {
+                                                                            echo "<td class='ini-bg-secondary'>".'-'."</td>";
+                                                                        } elseif(in_array($date, $holidaysArray)) {
                                                                             $holidayCount++;
                                                                             echo "<td class='ini-bg-primary'>".'H'."</td>";
                                                                         } elseif (in_array($date, $getWeekendDays)) {

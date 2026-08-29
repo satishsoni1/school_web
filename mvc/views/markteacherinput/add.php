@@ -38,20 +38,6 @@
                                 </div>
                                 
 
-                                <div class="col-md-3">
-                                    <div class="<?php echo form_error('sectionID') ? 'form-group has-error' : 'form-group'; ?>" >
-                                        <label class="control-label"><?=$this->lang->line('mark_section')?> <span class="text-red">*</span></label>
-                                        <?php
-                                            $arraysection = array('0' => $this->lang->line("mark_select_section"));
-                                            if(customCompute($sections)) {
-                                                foreach ($sections as $section) {
-                                                    $arraysection[$section->sectionID] = $section->section;
-                                                }
-                                            }
-                                            echo form_dropdown("sectionID", $arraysection, set_value("sectionID"), "id='sectionID' class='form-control select2'");
-                                        ?>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                         <div class="col-md-2 col-xs-12">
@@ -68,12 +54,11 @@
                 </form>
 
 
-                <?php if(customCompute($sendClasses) && customCompute($sendSection)) { ?>
+                <?php if(customCompute($sendClasses)) { ?>
                     <div class="col-sm-4 col-sm-offset-4 box-layout-fame">
                         <?php
                             echo '<h5><center>Attendance Details</center></h5>';
                             echo '<h5><center>'.$this->lang->line('mark_classes').' : '. $sendClasses->classes.'</center></h5>';
-                            echo '<h5><center>'.$this->lang->line('mark_section').' : '. $sendSection->section.'</center></h5>';
                         ?>
                     </div>
                 <?php } ?>
@@ -275,16 +260,6 @@
                 dataType: "html",
                 success: function(data) {
                    $('#examID').html(data);
-                }
-            });
-
-            $.ajax({
-                type: 'POST',
-                url: "<?=base_url('markteacherinput/sectioncall')?>",
-                data: {"id" : classesID},
-                dataType: "html",
-                success: function(data) {
-                   $('#sectionID').html(data);
                 }
             });
         }

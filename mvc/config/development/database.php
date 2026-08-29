@@ -49,11 +49,11 @@ $active_group = 'default';
 $active_record = TRUE;
 
 $db['default']['dsn'] = '';
-$db['default']['hostname'] = '';
-$db['default']['username'] = '';
-$db['default']['password'] = '';
-$db['default']['database'] = '';
-$db['default']['dbdriver'] = '';
+$db['default']['hostname'] = 'portal.ppgmis.com';
+$db['default']['username'] = 'u768414476_ppgmis';
+$db['default']['password'] = 'Ppgmis@123';
+$db['default']['database'] = 'u768414476_ppgmis';
+$db['default']['dbdriver'] = 'mysqli';
 $db['default']['dbprefix'] = '';
 $db['default']['pconnect'] = FALSE;
 $db['default']['db_debug'] = FALSE;

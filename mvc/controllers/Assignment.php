@@ -21,6 +21,8 @@ class Assignment extends Admin_Controller {
 		$this->load->model("section_m");
 		$this->load->model("subject_m");
 		$this->load->model("student_m");
+		$this->load->model("studentrelation_m");
+		$this->load->library("notification_lib");
 		$language = $this->session->userdata('lang');
 		$this->lang->load('assignment', $language);	
 	}
@@ -28,38 +30,38 @@ class Assignment extends Admin_Controller {
 	protected function rules() {
 		$rules = array(
 			array(
-				'field' => 'title', 
-				'label' => $this->lang->line("assignment_title"), 
-				'rules' => 'trim|required|xss_clean|max_length[128]'
-			), 
+				'field' => 'title',
+				'label' => $this->lang->line("assignment_type"),
+				'rules' => 'trim|required|xss_clean|max_length[128]|in_list[' . $this->lang->line("assignment_type_hw") . ',' . $this->lang->line("assignment_type_cw") . ']'
+			),
 			array(
-				'field' => 'description', 
+				'field' => 'description',
 				'label' => $this->lang->line("assignment_description"),
 				'rules' => 'trim|required|xss_clean'
-			), 
+			),
 			array(
-				'field' => 'classesID', 
+				'field' => 'classesID',
 				'label' => $this->lang->line("assignment_classes"),
 				'rules' => 'trim|required|numeric|max_length[11]|xss_clean|callback_unique_classes'
 			),
 			array(
-				'field' => 'deadlinedate', 
+				'field' => 'createddate',
+				'label' => $this->lang->line("assignment_createddate"),
+				'rules' => 'trim|required|xss_clean|max_length[10]|callback_date_valid'
+			),
+			array(
+				'field' => 'deadlinedate',
 				'label' => $this->lang->line("assignment_deadlinedate"),
 				'rules' => 'trim|required|xss_clean|max_length[10]|callback_date_valid|callback_pastdate_check'
 			),
 			array(
-				'field' => 'subjectID', 
+				'field' => 'subjectID',
 				'label' => $this->lang->line("assignment_subject"),
 				'rules' => 'trim|required|numeric|max_length[11]|xss_clean|callback_unique_subject'
 			),
 			array(
-				'field' => 'sectionID', 
-				'label' => $this->lang->line("assignment_section"),
-				'rules' => 'xss_clean|callback_unique_section'
-			),
-			array(
-				'field' => 'file', 
-				'label' => $this->lang->line("assignment_file"), 
+				'field' => 'file',
+				'label' => $this->lang->line("assignment_file"),
 				'rules' => 'trim|max_length[512]|xss_clean|callback_fileupload'
 			)
 		);
@@ -247,15 +249,30 @@ class Assignment extends Admin_Controller {
 						"userID" => $this->session->userdata('loginuserID'),
 						"classesID" => $this->input->post("classesID"),
 						"schoolyearID" => $this->session->userdata('defaultschoolyearID'),
+						"createddate" => date("Y-m-d H:i:s", strtotime($this->input->post("createddate"))),
 						'assignusertypeID' => 0,
 						'assignuserID' => 0
 					);
-					
+
 					$array['originalfile'] = $this->upload_data['file']['original_file_name'];
 					$array['file'] = $this->upload_data['file']['file_name'];
-					$array['sectionID'] = json_encode($this->input->post('sectionID'));
 
 					$this->assignment_m->insert_assignment($array);
+					$assignmentID = $this->db->insert_id();
+
+					$classStudents = $this->studentrelation_m->general_get_order_by_student(array(
+						'srclassesID' => $array['classesID'],
+						'srschoolyearID' => $array['schoolyearID'],
+					));
+					$studentIDs = pluck($classStudents, 'studentID');
+					$this->notification_lib->notify(array(
+						'title' => 'New Assignment: ' . $array['title'],
+						'message' => $array['description'],
+						'type' => 'assignment',
+						'referenceID' => $assignmentID,
+						'recipients' => $this->notification_lib->studentsToRecipients($studentIDs),
+					));
+
 					$this->session->set_flashdata('success', $this->lang->line('menu_success'));
 					redirect(base_url("assignment/index"));
 				}
@@ -293,8 +310,6 @@ class Assignment extends Admin_Controller {
 				if(isset($fetchClasses[$url])) {
 					$this->data['assignment'] = $this->assignment_m->get_single_assignment(array('assignmentID' => $id, 'schoolyearID' => $schoolyearID));
 					if($this->data['assignment']) {
-						$this->data['sectionID'] = json_decode($this->data['assignment']->sectionID);
-
 						if($this->input->post('classesID')) {
 							$classesID = $this->input->post('classesID');
 						} else {
@@ -319,16 +334,15 @@ class Assignment extends Admin_Controller {
 									"usertypeID" => $this->session->userdata('usertypeID'),
 									"userID" => $this->session->userdata('loginuserID'),
 									"classesID" => $this->input->post("classesID"),
+									"createddate" => date("Y-m-d H:i:s", strtotime($this->input->post("createddate"))),
 									'assignusertypeID' => 0,
 									'assignuserID' => 0
 								);
-								
+
 								$array['originalfile'] = $this->upload_data['file']['original_file_name'];
 								$array['file'] = $this->upload_data['file']['file_name'];
 
-								$array['sectionID'] = json_encode($this->input->post('sectionID'));
-
-								$this->assignment_m->update_assignment($array, $id);	
+								$this->assignment_m->update_assignment($array, $id);
 								$this->session->set_flashdata('success', $this->lang->line('menu_success'));
 								redirect(base_url("assignment/index/$url"));
 							}

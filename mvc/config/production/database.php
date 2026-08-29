@@ -49,6 +49,7 @@ $active_group = 'default';
 $active_record = TRUE;
 $db['default']['dsn'] = '';
 $db['default']['hostname'] = 'localhost';
+//$db['default']['hostname'] = 'portal.ppgmis.com';
 $db['default']['username'] = 'u768414476_ppgmis';
 $db['default']['password'] = 'Ppgmis@123';
 $db['default']['database'] = 'u768414476_ppgmis';

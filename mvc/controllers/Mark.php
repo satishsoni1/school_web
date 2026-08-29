@@ -194,23 +194,19 @@ class Mark extends Admin_Controller {
 
 	        $this->data['set_exam']    = 0;
 	        $this->data['set_classes'] = 0;
-	        $this->data['set_section'] = 0;
 	        $this->data['set_subject'] = 0;
 
 	        $this->data['sendExam']    = [];
 	        $this->data['sendSubject'] = [];
 	        $this->data['sendClasses'] = [];
-	        $this->data['sendSection'] = [];
 	        $this->data['exams']       = [];
 
 	        $classesID = $this->input->post("classesID");
 	        if((int)$classesID) {
 	        	$this->data['exams']    = $this->marksetting_m->get_exam($this->data['siteinfos']->marktypeID, $classesID);
 	            $this->data['subjects'] = $this->subject_m->get_order_by_subject(array('classesID' => $classesID));
-	            $this->data['sections'] = $this->section_m->get_order_by_section(array('classesID' => $classesID));
 	        } else {
 	            $this->data['subjects'] = [];
-	            $this->data['sections'] = [];
 	        }
 
 	        $this->data['classes']  = $this->classes_m->get_order_by_classes(['classesID !='=> $graduateclass]);
@@ -390,23 +386,19 @@ class Mark extends Admin_Controller {
 
 	        $this->data['set_exam']    = 0;
 	        $this->data['set_classes'] = 0;
-	        $this->data['set_section'] = 0;
 	        $this->data['set_subject'] = 0;
 
 	        $this->data['sendExam']    = [];
 	        $this->data['sendSubject'] = [];
 	        $this->data['sendClasses'] = [];
-	        $this->data['sendSection'] = [];
 	        $this->data['exams']       = [];
 
 	        $classesID = $this->input->post("classesID");
 	        if((int)$classesID) {
 	        	$this->data['exams']    = $this->marksetting_m->get_exam($this->data['siteinfos']->marktypeID, $classesID);
 	            $this->data['subjects'] = $this->subject_m->get_order_by_subject(array('classesID' => $classesID));
-	            $this->data['sections'] = $this->section_m->get_order_by_section(array('classesID' => $classesID));
 	        } else {
 	            $this->data['subjects'] = [];
-	            $this->data['sections'] = [];
 	        }
 
 	        $this->data['classes']  = $this->classes_m->get_order_by_classes(['classesID !='=> $graduateclass]);
@@ -420,19 +412,16 @@ class Mark extends Admin_Controller {
 	            } else {
 	                $examID          = $this->input->post('examID');
 	                $classesID       = $this->input->post('classesID');
-	                $sectionID       = $this->input->post('sectionID');
 	                $subjectID       = $this->input->post('subjectID');
 	                $this->data['set_exam']    = $examID;
 			        $this->data['set_classes'] = $classesID;
-			        $this->data['set_section'] = $sectionID;
 			        $this->data['set_subject'] = $subjectID;
 
 	                $exam            = $this->exam_m->get_single_exam(array('examID'=> $examID));
 	                $subject         = $this->subject_m->get_single_subject(array('subjectID'=> $subjectID));
 	                $classes         = $this->classes_m->get_single_classes(array('classesID'=> $classesID));
-	                $section         = $this->section_m->get_single_section(array('sectionID'=> $sectionID));
 	                $markpercentages = $this->markpercentage_m->get_markpercentage();
-	        		
+
 	        		$markpercentageArr['marktypeID'] = $this->data['siteinfos']->marktypeID;
 	        		$markpercentageArr['classesID']  = $classesID;
 	        		$markpercentageArr['examID']     = $examID;
@@ -442,12 +431,10 @@ class Mark extends Admin_Controller {
 	                $this->data['sendExam']     = $exam;
 	                $this->data['sendSubject']  = $subject;
 	                $this->data['sendClasses']  = $classes;
-	                $this->data['sendSection']  = $section;
 
 	                $schoolyearID       = $this->session->userdata('defaultschoolyearID');
 	                $studentArray = [
 	                	'srclassesID'   => $classesID,
-	                	'srsectionID'   => $sectionID,
 	                	'srschoolyearID'=> $schoolyearID,
 	                ];
 
@@ -1336,11 +1323,9 @@ class Mark extends Admin_Controller {
     }
 	
 	public function add_class9_marks() {
-		
-
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-
+        // Note: this used to force error_reporting(E_ALL) + display_errors=1 here, which
+        // re-enabled PHP 8.2's deprecation-notice flood for this one page (see index.php's
+        // ENVIRONMENT switch) — that flood is what broke this page with visible PHP errors.
         if(($this->data['siteinfos']->school_year == $this->session->userdata('defaultschoolyearID') || $this->session->userdata('usertypeID') == 1)) {
             $this->data['headerassets'] = array(
                 'css' => array('assets/select2/css/select2.css', 'assets/select2/css/select2-bootstrap.css'),

@@ -22,13 +22,6 @@
                         echo form_dropdown("classesID", $classesArray, set_value("classesID"), "id='classesID' class='form-control select2'");
                      ?>
                 </div>
-                <div class="form-group col-sm-4" id="sectionDiv">
-                    <label><?=$this->lang->line("progresscardreport_section")?></label>
-                    <?php
-                        $sectionArray[0] = $this->lang->line("progresscardreport_please_select");
-                        echo form_dropdown("sectionID", $sectionArray, set_value("sectionID"), "id='sectionID' class='form-control select2'");
-                     ?>
-                </div>
                 <div class="form-group col-sm-4" id="studentDiv">
                     <label><?=$this->lang->line("progresscardreport_student")?></label>
                     <?php
@@ -73,55 +66,26 @@
 
     $(function(){
         $("#classesID").val(0);
-        $("#sectionID").val(0);
         $("#studentID").val(0);
         $('#classesDiv').show('slow');
-        $('#sectionDiv').hide('slow');
         $('#studentDiv').hide('slow');
     });
 
     $(document).on('change',"#classesID", function() {
         $('#load_progresscardreport').html("");
-        $('#sectionDiv').show('slow');
         var classesID = $(this).val();
         if(classesID == '0') {
-            $('#sectionDiv').hide('slow');
-            $('#studentDiv').hide('slow');
-            $('#sectionID').html('<option value="0">'+"<?=$this->lang->line("progresscardreport_please_select")?>"+'</option>');
-            $('#sectionID').val('0');
-            $('#studentID').html('<option value="0">'+"<?=$this->lang->line("progresscardreport_please_select")?>"+'</option>');
-            $('#studentID').val('0');
-        } else {
-            $('#studentID').html('<option value="0">'+"<?=$this->lang->line("progresscardreport_please_select")?>"+'</option>');
-            $('#studentID').val('0');
-            $.ajax({
-                type: 'POST',
-                url: "<?=base_url('progresscardreport/getSection')?>",
-                data: {"classesID" : classesID},
-                dataType: "html",
-                success: function(data) {
-                   $('#sectionID').html(data);
-                }
-            });
-        }
-    });
-
-
-    $(document).on('change',"#sectionID", function() {
-        $('#load_progresscardreport').html("");
-        $('#studentDiv').show('slow');
-        var classesID = $('#classesID').val();
-        var sectionID = $('#sectionID').val();
-
-        if(sectionID == '0') {
             $('#studentDiv').hide('slow');
             $('#studentID').html('<option value="0">'+"<?=$this->lang->line("progresscardreport_please_select")?>"+'</option>');
             $('#studentID').val('0');
         } else {
+            $('#studentDiv').show('slow');
+            $('#studentID').html('<option value="0">'+"<?=$this->lang->line("progresscardreport_please_select")?>"+'</option>');
+            $('#studentID').val('0');
             $.ajax({
                 type: 'POST',
                 url: "<?=base_url('progresscardreport/getStudent')?>",
-                data: {"classesID" : classesID,"sectionID" : sectionID},
+                data: {"classesID" : classesID},
                 dataType: "html",
                 success: function(data) {
                    $('#studentID').html(data);
@@ -134,10 +98,10 @@
         $('#load_progresscardreport').html("");
         var error = 0;
         var field = {
-            'classesID'   : $('#classesID').val(), 
-            'sectionID'   : $('#sectionID').val(), 
-            'studentID'   : $('#studentID').val(), 
-            'termID'   : $('#termID').val(), 
+            'classesID'   : $('#classesID').val(),
+            'sectionID'   : 0,
+            'studentID'   : $('#studentID').val(),
+            'termID'   : $('#termID').val(),
         };
 
         if (field['classesID'] == 0) {

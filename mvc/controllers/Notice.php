@@ -18,6 +18,9 @@ class Notice extends Admin_Controller {
 		parent::__construct();
 		$this->load->model("notice_m");
 		$this->load->model("alert_m");
+		$this->load->model("classes_m");
+		$this->load->model("studentrelation_m");
+		$this->load->library("notification_lib");
 		$language = $this->session->userdata('lang');
 		$this->lang->load('notice', $language);
 	}
@@ -45,6 +48,11 @@ class Notice extends Admin_Controller {
 					'field' => 'notice',
 					'label' => $this->lang->line("notice_notice"),
 					'rules' => 'trim|required|xss_clean'
+				),
+				array(
+					'field' => 'classesID',
+					'label' => $this->lang->line("notice_classes"),
+					'rules' => 'trim|numeric|max_length[11]|xss_clean'
 				)
 			);
 		return $rules;
@@ -92,13 +100,17 @@ class Notice extends Admin_Controller {
 			$this->data['headerassets'] = array(
 				'css' => array(
 					'assets/datepicker/datepicker.css',
-					'assets/editor/jquery-te-1.4.0.css'
+					'assets/editor/jquery-te-1.4.0.css',
+					'assets/select2/css/select2.css',
+					'assets/select2/css/select2-bootstrap.css'
 				),
 				'js' => array(
 					'assets/editor/jquery-te-1.4.0.min.js',
-					'assets/datepicker/datepicker.js'
+					'assets/datepicker/datepicker.js',
+					'assets/select2/select2.js'
 				)
 			);
+			$this->data['classes'] = $this->classes_m->get_classes();
 			if($_POST) {
 				$rules = $this->rules();
 				$this->form_validation->set_rules($rules);
@@ -107,9 +119,11 @@ class Notice extends Admin_Controller {
 					$this->data["subview"] = "notice/add";
 					$this->load->view('_layout_main', $this->data);
 				} else {
+					$classesID = (int) $this->input->post("classesID");
 					$array = array(
 						"title" => $this->input->post("title"),
 						"notice" => $this->input->post("notice"),
+						"classesID" => $classesID ?: NULL,
 						'schoolyearID' =>  $this->session->userdata('defaultschoolyearID'),
 						"date" => date("Y-m-d", strtotime($this->input->post("date"))),
 						"create_date" => date("Y-m-d H:i:s"),
@@ -118,16 +132,12 @@ class Notice extends Admin_Controller {
 					);
 					$this->notice_m->insert_notice($array);
 
-					$title = $this->input->post("title");
-    				$message = $this->input->post("notice");
-    				$player_ids = []; // Or: ['xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx']
-
-    				$response = $this->send_notification($title, $message, $player_ids);
-					
 					$noticeID = $this->db->insert_id();
 					if(!empty($noticeID)) {
 						$this->alert_m->insert_alert(array('itemID' => $noticeID, "userID" => $this->session->userdata("loginuserID"), 'usertypeID' => $this->session->userdata('usertypeID'), 'itemname' => 'notice'));
 					}
+
+					$this->notification_lib->notify($this->noticeNotifyOptions($this->input->post("title"), $this->input->post("notice"), $noticeID, $classesID));
 
 					$this->session->set_flashdata('success', $this->lang->line('menu_success'));
 					redirect(base_url("notice/index"));
@@ -141,71 +151,49 @@ class Notice extends Admin_Controller {
 			$this->load->view('_layout_main', $this->data);
 		}
 	}
-	public function send_notification($title, $message, $player_ids = [])
-	{
-		$app_id = "ab01cc29-953c-407b-a775-a8af71fecc88"; // Replace with your OneSignal App ID
-		$api_key = "os_v2_app_vma4ykmvhrahxj3vvcxxd7wmrclipwvquw2eonnkjhb24exeytfrj44kp2ou6ejtu4bml3pzyj7na77nbs6vlfs3hvqyvymfzjhydki"; // Replace with your REST API Key
-		// Remove all HTML tags
-		$clean_message = strip_tags($message);
 
-		// Decode HTML entities (&amp; -> &, etc.)
-		$clean_message = html_entity_decode($clean_message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-		// Optional: normalize spaces
-		$clean_message = trim(preg_replace('/\s+/', ' ', $clean_message));
-		$content = [
-			"en" => $clean_message
-		];
-	
-		$headings = [
-			"en" => $title
-		];
-	
-		$fields = [
-			'app_id' => $app_id,
-			'headings' => $headings,
-			'contents' => $content,
-		];
-	
-		if (!empty($player_ids)) {
-			$fields['include_player_ids'] = $player_ids;  // Target specific devices
+	// Notification sending lives in Notification_lib (mvc/libraries/Notification_lib.php), which
+	// records per-user history and targets specific recipients instead of broadcasting to every
+	// device. A class-wise notice (classesID set) only reaches that class's students + parents;
+	// "All Classes" (classesID 0/blank) still reaches every teacher/student/parent as before.
+	private function noticeNotifyOptions($title, $notice, $noticeID, $classesID) {
+		$options = array(
+			'title' => $title,
+			'message' => $notice,
+			'type' => 'notice',
+			'referenceID' => $noticeID,
+		);
+		if ($classesID) {
+			$schoolyearID = $this->session->userdata('defaultschoolyearID');
+			$students = $this->studentrelation_m->general_get_order_by_student(array(
+				'srclassesID' => $classesID,
+				'srschoolyearID' => $schoolyearID,
+			));
+			$options['recipients'] = $this->notification_lib->studentsToRecipients(pluck($students, 'studentID'));
 		} else {
-			$fields['included_segments'] = ['All'];  // Send to all users
+			$options['usertypeIDs'] = array(2, 3, 4);
 		}
-	
-		$fields = json_encode($fields);
-	
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, "https://onesignal.com/api/v1/notifications");
-		curl_setopt($ch, CURLOPT_HTTPHEADER, [
-			'Content-Type: application/json; charset=utf-8',
-			'Authorization: Basic '.$api_key
-		]);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($ch, CURLOPT_HEADER, FALSE);
-		curl_setopt($ch, CURLOPT_POST, TRUE);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-	
-		$response = curl_exec($ch);
-		curl_close($ch);
-	
-		return $response;
+		return $options;
 	}
+
 	public function edit() {
 		if(($this->data['siteinfos']->school_year == $this->session->userdata('defaultschoolyearID')) || ($this->session->userdata('usertypeID') == 1)) {
 			$this->data['headerassets'] = array(
 				'css' => array(
 					'assets/datepicker/datepicker.css',
-					'assets/editor/jquery-te-1.4.0.css'
+					'assets/editor/jquery-te-1.4.0.css',
+					'assets/select2/css/select2.css',
+					'assets/select2/css/select2-bootstrap.css'
 				),
 				'js' => array(
 					'assets/editor/jquery-te-1.4.0.min.js',
-					'assets/datepicker/datepicker.js'
+					'assets/datepicker/datepicker.js',
+					'assets/select2/select2.js'
 				)
 			);
 			$schoolyearID = $this->session->userdata('defaultschoolyearID');
 			$id = htmlentities(escapeString($this->uri->segment(3)));
+			$this->data['classes'] = $this->classes_m->get_classes();
 			if((int)$id) {
 				$this->data['notice'] = $this->notice_m->get_single_notice(array('noticeID' => $id, 'schoolyearID' => $schoolyearID));
 				if($this->data['notice']) {
@@ -216,19 +204,19 @@ class Notice extends Admin_Controller {
 							$this->data["subview"] = "notice/edit";
 							$this->load->view('_layout_main', $this->data);
 						} else {
+							$classesID = (int) $this->input->post("classesID");
 							$array = array(
 								"title" => $this->input->post("title"),
 								"notice" => $this->input->post("notice"),
+								"classesID" => $classesID ?: NULL,
 								"date" => date("Y-m-d", strtotime($this->input->post("date")))
 							);
-							
+
 
 							$this->notice_m->update_notice($array, $id);
-							$title = $this->input->post("title");
-    						$message = $this->input->post("notice");
-    						$player_ids = []; // Or: ['xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx']
 
-    						$response = $this->send_notification($title, $message, $player_ids);
+							$this->notification_lib->notify($this->noticeNotifyOptions($this->input->post("title"), $this->input->post("notice"), $id, $classesID));
+
 							$this->session->set_flashdata('success', $this->lang->line('menu_success'));
 							redirect(base_url("notice/index"));
 						}

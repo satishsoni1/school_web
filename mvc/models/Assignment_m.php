@@ -13,8 +13,13 @@ class Assignment_m extends MY_Model {
 
 	function join_get_assignment($classesID, $schoolyearID) {
 		$this->db->select('*');
+		$this->db->select('assignment.createddate as assigndate');
+		$this->db->select('COALESCE(teacher.name, systemadmin.name, user.name) as teachername');
 		$this->db->from('assignment');
 		$this->db->join('subject', 'subject.subjectID = assignment.subjectID AND subject.classesID = assignment.classesID', 'LEFT');
+		$this->db->join('teacher', 'teacher.usertypeID = assignment.usertypeID AND teacher.teacherID = assignment.userID', 'LEFT');
+		$this->db->join('systemadmin', 'systemadmin.usertypeID = assignment.usertypeID AND systemadmin.systemadminID = assignment.userID', 'LEFT');
+		$this->db->join('user', 'user.usertypeID = assignment.usertypeID AND user.userID = assignment.userID', 'LEFT');
 		$this->db->where('assignment.schoolyearID', $schoolyearID);
 		$this->db->where('assignment.classesID', $classesID);
 		$this->db->order_by('deadlinedate','desc');

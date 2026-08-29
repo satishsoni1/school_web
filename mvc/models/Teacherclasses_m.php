@@ -82,10 +82,15 @@ class Teacherclasses_m extends CI_Model {
 		$this->db->from('teacher t');
 		$this->db->join('classes c', 'c.teacherID = t.teacherID');
 		$this->db->where('c.classesID', $classesID);
-		
+
 		$query = $this->db->get();
 		$result = $query->row();
-		$arr = [$result->sign,$result->name];
+		if (!$result) {
+			// No class teacher assigned to this class (classes.teacherID is 0/NULL) — return nulls
+			// so callers can fall back instead of crashing on a property read against null.
+			return [null, null];
+		}
+		$arr = [$result->sign, $result->name];
 		return $arr;
 	}
 

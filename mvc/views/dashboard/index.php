@@ -1,3 +1,10 @@
+<div class="ppg-dashboard-welcome">
+    <div class="ppg-dashboard-welcome-text">
+        <h2>Welcome back, <?=$this->session->userdata('name')?></h2>
+        <p><?=date('l, d F Y')?> &middot; <?=$this->session->userdata('usertype')?></p>
+    </div>
+</div>
+
 <div class="row">
     <?php if(config_item('demo')) { ?>
         <div class="col-sm-12" id="resetDummyData">
@@ -43,6 +50,18 @@
             'bg-pink-light',
             'bg-purple-light'
         );
+
+        // Indian numbering: 1 Lac = 1,00,000; 1 Cr = 1,00,00,000. Large fee totals otherwise
+        // print as an unreadable string of digits on a small stat-box.
+        function formatIndianAmount($amount) {
+            $amount = (float) $amount;
+            if ($amount >= 10000000) {
+                return number_format($amount / 10000000, 2) . ' Cr';
+            } elseif ($amount >= 100000) {
+                return number_format($amount / 100000, 2) . ' L';
+            }
+            return number_format($amount);
+        }
 
         function allModuleArray($usertypeID='1', $dashboardWidget) {
           $userAllModuleArray = array(
@@ -178,16 +197,62 @@
                 </div>
             </div>
     <?php } } ?>
-</div>
 
-<?php if($getActiveUserID == 1 || $getActiveUserID == 5) { ?>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="box">
-                <div class="box-body" style="padding: 0px;">
-                    <div id="earningGraph"></div>
+    <?php // Admin-only extra stat boxes — Fee collection/Leave aren't part of the
+          // permission-gated 4-box loop above (that loop only shows modules that have an exact
+          // matching menu/permission entry for the logged-in usertype), so they're added here
+          // directly for the school administrator, using real counts from _adminWidgets(). ?>
+    <?php if($getActiveUserID == 1) {
+        $feeCurrency = !empty($siteinfos->currency_code) ? ' '.$siteinfos->currency_code : '';
+        $adminBoxes = array(
+            array('icon' => 'fa-money',       'color' => 'bg-orange-dark', 'link' => 'invoice',          'count' => formatIndianAmount($dashboardWidget['feecollected'] ?? 0).$feeCurrency, 'label' => 'Fee Collected (this year)'),
+            array('icon' => 'fa-exclamation-triangle', 'color' => 'bg-pink-light', 'link' => 'invoice',  'count' => $dashboardWidget['dueinvoices'] ?? 0, 'label' => 'Due / Partial Invoices'),
+            array('icon' => 'fa-file-text-o',  'color' => 'bg-teal-light',  'link' => 'invoice',          'count' => $dashboardWidget['invoices'] ?? 0,    'label' => 'Total Invoices'),
+            array('icon' => 'fa-calendar-times-o', 'color' => 'bg-purple-light', 'link' => 'leaveapplication', 'count' => $dashboardWidget['pendingleave'] ?? 0, 'label' => 'Pending Leave Requests'),
+        );
+        foreach ($adminBoxes as $adminBox) { ?>
+            <div class="col-lg-3 col-xs-6">
+                <div class="small-box ">
+                    <a class="small-box-footer <?=$adminBox['color']?>" href="<?=base_url($adminBox['link'])?>">
+                        <div class="icon <?=$adminBox['color']?>" style="padding: 9.5px 18px 6px 18px;">
+                            <i class="fa <?=$adminBox['icon']?>"></i>
+                        </div>
+                        <div class="inner ">
+                            <h3 class="text-white"><?=$adminBox['count']?></h3>
+                            <p class="text-white"><?=$adminBox['label']?></p>
+                        </div>
+                    </a>
                 </div>
             </div>
+    <?php } } ?>
+</div>
+
+<?php // Income/Expense ("Earning") graph removed — this school doesn't record accounts in
+      // this portal, so the chart was always empty. See Dashboard.php::_incomeExpenseGraph(). ?>
+
+<?php if($getActiveUserID == 1) { ?>
+    <div class="row">
+        <div class="col-sm-6">
+            <?php $this->load->view('dashboard/LeaveApplicationsWidget'); ?>
+        </div>
+        <div class="col-sm-6">
+            <?php $this->load->view('dashboard/BirthdaysWidget'); ?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-4">
+            <?php $this->load->view('dashboard/StudentAttendanceWidget'); ?>
+        </div>
+        <div class="col-sm-4">
+            <?php $this->load->view('dashboard/StaffAttendanceWidget'); ?>
+        </div>
+        <div class="col-sm-4">
+            <?php $this->load->view('dashboard/ComplaintsWidget'); ?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <?php $this->load->view('dashboard/ExamMarkWidget'); ?>
         </div>
     </div>
 <?php } ?>
@@ -255,6 +320,5 @@
         $this->load->view("dashboard/SubjectWiseAttendanceHighChartJavascript");
     }
 ?>
-<?php $this->load->view("dashboard/EarningHighChartJavascript.php"); ?>
 <?php $this->load->view("dashboard/CalenderJavascript"); ?>
 <?php $this->load->view("dashboard/VisitorHighChartJavascript"); ?>

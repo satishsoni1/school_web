@@ -40,11 +40,6 @@ class Markteacherinput extends Admin_Controller {
 				'label' => $this->lang->line("mark_classes"),
 				'rules' => 'trim|required|xss_clean|max_length[11]|callback_unique_classesID'
 			),
-			array(
-				'field' => 'sectionID',
-				'label' => $this->lang->line("mark_section"),
-				'rules' => 'trim|required|xss_clean|max_length[11]|callback_unique_sectionID'
-			),
 		);
 		return $rules;
 	}
@@ -174,21 +169,14 @@ class Markteacherinput extends Admin_Controller {
 
 	        
 	        $this->data['set_classes'] = 0;
-	        $this->data['set_section'] = 0;
-	        
 
-	        
 	        $this->data['sendClasses'] = [];
-	        $this->data['sendSection'] = [];
 
 	        $classesID = $this->input->post("classesID");
 	        if((int)$classesID) {
-	        	
 	            $this->data['subjects'] = $this->subject_m->get_order_by_subject(array('classesID' => $classesID));
-	            $this->data['sections'] = $this->section_m->get_order_by_section(array('classesID' => $classesID));
 	        } else {
 	            $this->data['subjects'] = [];
-	            $this->data['sections'] = [];
 	        }
 
 	        $this->data['classes']  = $this->classes_m->get_order_by_classes(['classesID !='=> $graduateclass]);
@@ -204,24 +192,16 @@ class Markteacherinput extends Admin_Controller {
 	            } else {
 
 	                $classesID       = $this->input->post('classesID');
-	                $sectionID       = $this->input->post('sectionID');
-	                
+
 			        $this->data['set_classes'] = $classesID;
-			        $this->data['set_section'] = $sectionID;
 
-	                
 	                $classes         = $this->classes_m->get_single_classes(array('classesID'=> $classesID));
-	                $section         = $this->section_m->get_single_section(array('sectionID'=> $sectionID));
-	        		
 
-	                
 	                $this->data['sendClasses']  = $classes;
-	                $this->data['sendSection']  = $section;
 
 	                $schoolyearID       = $this->session->userdata('defaultschoolyearID');
 	                $studentArray = [
 	                	'srclassesID'   => $classesID,
-	                	'srsectionID'   => $sectionID,
 	                	'srschoolyearID'=> $schoolyearID,
 	                ];
 

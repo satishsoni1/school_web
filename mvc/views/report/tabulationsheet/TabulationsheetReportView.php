@@ -33,15 +33,6 @@
                         echo form_dropdown("examID", $examArray, set_value("examID"), "id='examID' class='form-control select2'");
                      ?>
                 </div>
-                <div class="form-group col-sm-4" id="sectionDiv">
-                    <label><?=$this->lang->line("tabulationsheetreport_section")?></label>
-                    <?php
-                        $sectionArray = array(
-                            "0" => $this->lang->line("tabulationsheetreport_please_select"),
-                        );
-                        echo form_dropdown("sectionID", $sectionArray, set_value("sectionID"), "id='sectionID' class='form-control select2'");
-                     ?>
-                </div>
                 <div class="form-group col-sm-4" id="studentDiv">
                     <label><?=$this->lang->line("tabulationsheetreport_student")?></label>
                     <?php
@@ -78,11 +69,9 @@
     $(function(){
         $("#examID").val(0);
         $("#classesID").val(0);
-        $("#sectionID").val(0);
         $("#studentID").val(0);
         $('#classesDiv').show('slow');
         $('#examDiv').hide('slow');
-        $('#sectionDiv').hide('slow');
         $('#studentDiv').hide('slow');
     });
 
@@ -91,14 +80,12 @@
         var classesID = $(this).val();
         if(classesID == '0'){
             $('#examDiv').hide('slow');
-            $('#sectionDiv').hide('slow');
             $('#studentDiv').hide('slow');
             $('#examID').html('<option value="0">'+"<?=$this->lang->line("tabulationsheetreport_please_select")?>"+'</option>');
-            $('#sectionID').html('<option value="0">'+"<?=$this->lang->line("tabulationsheetreport_please_select")?>"+'</option>');
             $('#studentID').html('<option value="0">'+"<?=$this->lang->line("tabulationsheetreport_please_select")?>"+'</option>');
         } else {
             $('#examDiv').show('slow');
-            $('#sectionDiv').show('slow');
+            $('#studentDiv').show('slow');
             $.ajax({
                 type: 'POST',
                 url: "<?=base_url('tabulationsheetreport/getExam')?>",
@@ -110,29 +97,8 @@
             });
             $.ajax({
                 type: 'POST',
-                url: "<?=base_url('tabulationsheetreport/getSection')?>",
-                data: {"classesID" : classesID},
-                dataType: "html",
-                success: function(data) {
-                   $('#sectionID').html(data);
-                }
-            });
-        }
-    });
-
-    $(document).on('change',"#sectionID", function() {
-        $('#load_tabulationsheetreport').html("");
-        var sectionID = $(this).val();
-        var classesID = $("#classesID").val();
-        if(sectionID == '0') {
-            $('#studentDiv').hide('slow');
-            $('#studentID').html('<option value="0">'+"<?=$this->lang->line("tabulationsheetreport_please_select")?>"+'</option>');
-        } else {
-            $('#studentDiv').show('slow');
-            $.ajax({
-                type: 'POST',
                 url: "<?=base_url('tabulationsheetreport/getStudent')?>",
-                data: {"classesID": classesID, "sectionID": sectionID},
+                data: {"classesID": classesID},
                 dataType: "html",
                 success: function(data) {
                    $('#studentID').html(data);
@@ -151,9 +117,9 @@
         var error = 0;
         var field = {
             'examID'    : $("#examID").val(),
-            'classesID' : $('#classesID').val(), 
-            'sectionID' : $('#sectionID').val(), 
-            'studentID' : $('#studentID').val(), 
+            'classesID' : $('#classesID').val(),
+            'sectionID' : 0,
+            'studentID' : $('#studentID').val(),
         };
 
         if (field['examID'] == 0) {

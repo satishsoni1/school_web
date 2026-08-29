@@ -41,10 +41,10 @@
                         <thead>
                             <tr>
                                 <th><?=$this->lang->line('slno')?></th>
-                                <th><?=$this->lang->line('assignment_title')?></th>
+                                <th><?=$this->lang->line('assignment_type')?></th>
                                 <th class="col-lg-3"><?=$this->lang->line('assignment_description')?></th>
+                                <th><?=$this->lang->line('assignment_createddate')?></th>
                                 <th><?=$this->lang->line('assignment_deadlinedate')?></th>
-                                <th><?=$this->lang->line('assignment_section')?></th>
                                 <th><?=$this->lang->line('assignment_uploder')?></th>
                                 <th><?=$this->lang->line('assignment_file')?></th>
                                 <?php if(permissionChecker('assignment_edit') || permissionChecker('assignment_delete') || permissionChecker('assignment_view')) { ?>
@@ -61,28 +61,17 @@
                                     <td data-title="<?=$this->lang->line('slno')?>">
                                         <?php echo $i; ?>
                                     </td>
-                                    <td data-title="<?=$this->lang->line('assignment_title')?>">
+                                    <td data-title="<?=$this->lang->line('assignment_type')?>">
                                         <?php echo $assignment->title; ?>
                                     </td>
                                     <td data-title="<?=$this->lang->line('assignment_description')?>">
                                         <?php echo $assignment->description; ?>
                                     </td>
+                                    <td data-title="<?=$this->lang->line('assignment_createddate')?>">
+                                        <?php echo $assignment->createddate ? date('d M Y', strtotime($assignment->createddate)) : ''; ?>
+                                    </td>
                                     <td data-title="<?=$this->lang->line('assignment_deadlinedate')?>">
                                         <?php echo date('d M Y', strtotime($assignment->deadlinedate)); ?>
-                                    </td>
-                                    <td data-title="<?=$this->lang->line('assignment_section')?>">
-                                        <?php  
-                                        if($assignment->sectionID == 'false') {
-                                            if(customCompute($sections)) foreach ($sections as $section) {
-                                                echo $this->lang->line('assignment_section').' '.$section.'<br>';
-                                            }
-                                        } else {
-                                            $dbSections = json_decode($assignment->sectionID);
-                                            if(customCompute($dbSections)) foreach ($dbSections as $dbSectionID) {
-                                                echo $this->lang->line('assignment_section').' '. $sections[$dbSectionID].'<br>';
-                                            } 
-                                        }
-                                        ?>
                                     </td>
                                     <td data-title="<?=$this->lang->line('assignment_uploder')?>">
                                         <?php echo getNameByUsertypeIDAndUserID($assignment->usertypeID, $assignment->userID); ?>

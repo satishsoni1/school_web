@@ -49,10 +49,10 @@
                         </span>
                     </div>
 
-                    <?php 
-                        if(form_error('notice')) 
+                    <?php
+                        if(form_error('notice'))
                             echo "<div class='form-group has-error' >";
-                        else     
+                        else
                             echo "<div class='form-group' >";
                     ?>
                         <label for="notice" class="col-sm-1 control-label">
@@ -63,6 +63,29 @@
                         </div>
                         <span class="col-sm-3 control-label">
                             <?php echo form_error('notice'); ?>
+                        </span>
+                    </div>
+
+                    <?php
+                        if(form_error('classesID'))
+                            echo "<div class='form-group has-error' >";
+                        else
+                            echo "<div class='form-group' >";
+                    ?>
+                        <label for="classesID" class="col-sm-1 control-label">
+                            <?=$this->lang->line("notice_classes")?>
+                        </label>
+                        <div class="col-sm-4">
+                            <?php
+                                $array = array('0' => $this->lang->line("notice_all_classes"));
+                                foreach ($classes as $classa) {
+                                    $array[$classa->classesID] = $classa->classes;
+                                }
+                                echo form_dropdown("classesID", $array, set_value("classesID", $notice->classesID), "id='classesID' class='form-control select2'");
+                            ?>
+                        </div>
+                        <span class="col-sm-4 control-label">
+                            <?php echo form_error('classesID'); ?>
                         </span>
                     </div>
 
@@ -84,5 +107,6 @@ $('#date').datepicker({
     endDate:'<?=$schoolyearsessionobj->endingdate?>',
 });
 $('#notice').jqte();
+$('#classesID').select2();
 </script>
 

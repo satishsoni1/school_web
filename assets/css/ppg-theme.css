@@ -1,0 +1,318 @@
+/* PPGMIS Web Admin — teal theme refresh (matches the mobile app's brand)
+   Loaded last in page_header.php so it wins the cascade over the base AdminLTE/
+   Inilabs theme CSS without needing !important everywhere. Restyles colors,
+   typography and card chrome in place — does not touch page markup/structure. */
+
+:root {
+  --ppg-teal-500: #14B8A6;
+  --ppg-teal-600: #0D9488;
+  --ppg-teal-700: #0F766E;
+  --ppg-teal-800: #115E59;
+  --ppg-teal-900: #0A3D39;
+  --ppg-slate-50:  #F8FAFC;
+  --ppg-slate-100: #F1F5F9;
+  --ppg-slate-200: #E2E8F0;
+  --ppg-slate-500: #64748B;
+  --ppg-slate-700: #334155;
+  --ppg-slate-900: #0F172A;
+  --ppg-header-bg: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+  --ppg-sidebar-bg: linear-gradient(180deg, #115E59 0%, #0A3D39 100%);
+  --ppg-radius: 12px;
+  --ppg-shadow: 0 2px 12px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+body, .wrapper {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--ppg-slate-100);
+  color: var(--ppg-slate-900);
+}
+
+a { color: var(--ppg-teal-700); }
+a:hover, a:focus { color: var(--ppg-teal-800); }
+
+/* ─── Top navbar / header ──────────────────────────────────────────────── */
+.main-header .navbar,
+.skin-blue .navbar,
+.skin-blue .main-header .navbar {
+  background: var(--ppg-header-bg) !important;
+}
+.skin-blue .navbar .nav > li > a { color: rgba(255,255,255,0.92); }
+.skin-blue .navbar .nav > li > a:hover,
+.skin-blue .navbar .nav > li > a:active,
+.skin-blue .navbar .nav > li > a:focus,
+.skin-blue .navbar .nav .open > a {
+  background: rgba(255,255,255,0.12) !important;
+  color: #fff;
+}
+.skin-blue .navbar .sidebar-toggle { color: rgba(255,255,255,0.92); }
+.main-header .logo,
+.skin-blue .logo,
+body > .header .logo {
+  background: var(--ppg-teal-900) !important;
+  color: #fff !important;
+  border-bottom: none;
+}
+.main-header .logo:hover,
+.skin-blue .logo:hover {
+  background: var(--ppg-teal-800) !important;
+}
+
+/* ─── Sidebar ──────────────────────────────────────────────────────────── */
+.main-sidebar, .left-side, .sidebar-offcanvas,
+.wrapper .left-side {
+  background: var(--ppg-sidebar-bg) !important;
+}
+.sidebar .sidebar-menu > li > a,
+.skin-blue .sidebar-menu > li > a {
+  color: rgba(241, 245, 249, 0.85);
+  border-left: 3px solid transparent;
+}
+.sidebar .sidebar-menu > li > a:hover,
+.sidebar .sidebar-menu > li.active > a,
+.sidebar .sidebar-menu > li.active > a:hover,
+.skin-blue .sidebar-menu > li:hover > a,
+.skin-blue .sidebar-menu > li.active > a {
+  background: rgba(20, 184, 166, 0.18) !important;
+  color: #fff !important;
+  border-left-color: var(--ppg-teal-500);
+}
+/* Submenu (treeview) container — theme default was a lavender #C1C1E3 block, never
+   touched by the link-color rules below since those only style the <a> text inside it.
+   Solid color, not translucent — a semi-transparent background here blends unpredictably
+   with whatever sits behind it in the sidebar's stacking context. */
+.sidebar-menu .treeview-menu,
+.sidebar .sidebar-menu > li > .treeview-menu,
+.skin-blue .sidebar > .sidebar-menu > li > .treeview-menu,
+.skin-blue .sidebar-menu .treeview-menu {
+  background: var(--ppg-teal-900) !important;
+}
+/* Each submenu *item* also carries its own separate light-gray background (#EDEFF4) —
+   without this it sits as a mismatched gray block on top of the dark teal container above. */
+.sidebar .sidebar-menu .treeview-menu > li {
+  background-color: transparent !important;
+}
+.sidebar .sidebar-menu .treeview-menu > li > a {
+  color: rgba(241, 245, 249, 0.65);
+}
+.sidebar .sidebar-menu .treeview-menu > li > a:hover,
+.sidebar .sidebar-menu .treeview-menu > li.active > a {
+  color: #fff;
+}
+.sidebar .user-panel .info, .sidebar .user-panel .info a {
+  color: #fff;
+}
+
+/* ─── Buttons ──────────────────────────────────────────────────────────── */
+.btn-primary {
+  background-color: var(--ppg-teal-700) !important;
+  border-color: var(--ppg-teal-700) !important;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background-color: var(--ppg-teal-800) !important;
+  border-color: var(--ppg-teal-800) !important;
+}
+.btn-success {
+  background-color: var(--ppg-teal-600) !important;
+  border-color: var(--ppg-teal-600) !important;
+}
+.btn-success:hover, .btn-success:focus, .btn-success:active {
+  background-color: var(--ppg-teal-700) !important;
+  border-color: var(--ppg-teal-700) !important;
+}
+.label-primary, .bg-light-blue, .bg-aqua { background-color: var(--ppg-teal-600) !important; }
+
+/* ─── Cards / boxes ────────────────────────────────────────────────────── */
+.box {
+  border-radius: var(--ppg-radius);
+  box-shadow: var(--ppg-shadow);
+  border-top: none;
+  overflow: hidden;
+}
+.box.box-primary { border-top: 3px solid var(--ppg-teal-600); }
+/* `.box .box-header` (theme default, #3C8DBC) is more specific than a bare `.box-header`
+   rule, so it must be matched/beaten explicitly here — this was the leftover-blue box
+   header on every page. */
+.box-header,
+.box .box-header,
+.box.box-solid.box-primary > .box-header {
+  background: #fff !important;
+  color: var(--ppg-slate-900) !important;
+  border-bottom: 1px solid var(--ppg-slate-200);
+}
+/* These were explicit white/near-white rules on the title and breadcrumb links
+   themselves (not inherited from .box-header), designed for the old blue header
+   background — an ancestor `color` override can never beat them, so they need
+   their own explicit fix now that the header background is white. */
+.box .box-header .box-title,
+.box-header .box-title {
+  color: var(--ppg-slate-900) !important;
+  font-weight: 600;
+}
+.box .box-header a,
+.box-header .breadcrumb > li > a {
+  color: var(--ppg-teal-700) !important;
+}
+.box-header .breadcrumb > .active { color: var(--ppg-slate-500) !important; }
+.box-footer { background: var(--ppg-slate-50); }
+
+/* ─── Misc leftover skin-blue (#3C8DBC) / default-gray (#DADADA) spots ──── */
+.sidebar .user-panel {
+  background: var(--ppg-teal-900) !important;
+}
+.bg-light-blue-gradient,
+.progress-bar-light-blue,
+.progress-bar-primary {
+  background: var(--ppg-teal-600) !important;
+}
+.text-light-blue { color: var(--ppg-teal-600) !important; }
+.dropdown-menu > li > a:hover {
+  background-color: var(--ppg-teal-600) !important;
+  color: #fff !important;
+}
+.navbar-nav > .user-menu > .dropdown-menu > li.user-header {
+  background: var(--ppg-header-bg) !important;
+}
+.box .todo-list > li.primary { border-left-color: var(--ppg-teal-600) !important; }
+.nav.nav-pills > li.active > a,
+.nav.nav-pills > li.active > a:hover {
+  border-top-color: var(--ppg-teal-600) !important;
+}
+.nav.nav-pills.nav-stacked > li.active > a,
+.nav.nav-pills.nav-stacked > li.active > a:hover {
+  border-left-color: var(--ppg-teal-600) !important;
+}
+
+/* Dashboard stat cards */
+.small-box {
+  border-radius: var(--ppg-radius);
+  box-shadow: var(--ppg-shadow);
+  overflow: hidden;
+}
+.small-box:hover { box-shadow: 0 8px 24px rgba(15,23,42,0.12); }
+
+/* ─── Tables ───────────────────────────────────────────────────────────── */
+.table > thead > tr > th {
+  background: var(--ppg-slate-50);
+  color: var(--ppg-slate-700);
+  border-bottom: 2px solid var(--ppg-slate-200);
+}
+.table-bordered { border-color: var(--ppg-slate-200); }
+.table-striped > tbody > tr:nth-of-type(odd) { background-color: var(--ppg-slate-50); }
+
+/* ─── Forms ────────────────────────────────────────────────────────────── */
+.form-control:focus {
+  border-color: var(--ppg-teal-500);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+.select2-container--default.select2-container--focus .select2-selection,
+.select2-container--bootstrap .select2-selection:focus {
+  border-color: var(--ppg-teal-500);
+}
+
+/* ─── Breadcrumb / pagination ──────────────────────────────────────────── */
+.breadcrumb > .active { color: var(--ppg-teal-700); }
+.pagination > .active > a, .pagination > .active > span {
+  background-color: var(--ppg-teal-600) !important;
+  border-color: var(--ppg-teal-600) !important;
+}
+
+/* ─── Tabs ─────────────────────────────────────────────────────────────── */
+.nav-tabs-custom > .nav-tabs > li.active {
+  border-top-color: var(--ppg-teal-600);
+  border-bottom-color: var(--ppg-teal-600) !important;
+}
+.nav-tabs-custom > .nav-tabs > li.active > a { color: var(--ppg-slate-900); font-weight: 600; }
+
+/* ─── Dashboard welcome banner ─────────────────────────────────────────── */
+.ppg-dashboard-welcome {
+  background: var(--ppg-header-bg);
+  border-radius: var(--ppg-radius);
+  padding: 24px 28px;
+  margin-bottom: 18px;
+  box-shadow: var(--ppg-shadow);
+}
+.ppg-dashboard-welcome-text h2 {
+  color: #fff;
+  font-weight: 700;
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+.ppg-dashboard-welcome-text p {
+  color: rgba(255,255,255,0.85);
+  margin: 0;
+  font-size: 13.5px;
+}
+
+/* Dashboard stat-box content readability */
+.small-box .inner h3 { font-weight: 700; }
+.small-box .icon { opacity: 0.35; }
+
+/* Dashboard: Leave Applications / Birthdays widgets */
+.ppg-widget-box .box-header .box-title { display: flex; align-items: center; gap: 8px; }
+.ppg-widget-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(13, 148, 136, 0.1);
+  color: var(--ppg-teal-700);
+  font-size: 13px;
+}
+
+/* Staff Attendance Today widget */
+.ppg-attendance-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.ppg-attendance-stat {
+  flex: 1 1 calc(25% - 12px);
+  min-width: 80px;
+  text-align: center;
+  padding: 14px 8px;
+  border-radius: 10px;
+  background: var(--ppg-slate-50);
+}
+.ppg-attendance-stat .ppg-stat-count {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ppg-slate-900);
+}
+.ppg-attendance-stat .ppg-stat-label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ppg-slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+.ppg-stat-present .ppg-stat-count { color: #10B981; }
+.ppg-stat-absent .ppg-stat-count { color: #EF4444; }
+.ppg-stat-leave .ppg-stat-count { color: #F59E0B; }
+.ppg-stat-unmarked .ppg-stat-count { color: var(--ppg-slate-500); }
+
+/* Upcoming Exams / Mark widget */
+.ppg-date-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: rgba(13, 148, 136, 0.1);
+  color: var(--ppg-teal-700);
+  line-height: 1.1;
+}
+.ppg-date-chip .ppg-date-day { font-size: 15px; font-weight: 700; }
+.ppg-date-chip .ppg-date-month { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; }
+.ppg-widget-footer {
+  background: var(--ppg-slate-50);
+  color: var(--ppg-slate-700);
+  font-size: 12.5px;
+  padding: 10px 15px;
+}
+.ppg-widget-footer a { font-weight: 600; }

@@ -22,10 +22,17 @@
                             echo "<div class='form-group' >";
                     ?>
                         <label for="title" class="col-sm-2 control-label">
-                            <?=$this->lang->line("assignment_title")?> <span class="text-red">*</span>
+                            <?=$this->lang->line("assignment_type")?> <span class="text-red">*</span>
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" id="title" name="title" value="<?=set_value('title', $assignment->title)?>" >
+                            <?php
+                                $array = array(
+                                    '' => $this->lang->line("assignment_type"),
+                                    $this->lang->line("assignment_type_hw") => $this->lang->line("assignment_type_hw"),
+                                    $this->lang->line("assignment_type_cw") => $this->lang->line("assignment_type_cw"),
+                                );
+                                echo form_dropdown("title", $array, set_value("title", $assignment->title), "id='title' class='form-control select2'");
+                            ?>
                         </div>
                         <span class="col-sm-4 control-label">
                             <?php echo form_error('title'); ?>
@@ -49,17 +56,34 @@
                         </span>
                     </div>
 
-                    <?php 
-                        if(form_error('deadlinedate')) 
+                    <?php
+                        if(form_error('createddate'))
                             echo "<div class='form-group has-error' >";
-                        else     
+                        else
+                            echo "<div class='form-group' >";
+                    ?>
+                        <label for="createddate" class="col-sm-2 control-label">
+                            <?=$this->lang->line("assignment_createddate")?> <span class="text-red">*</span>
+                        </label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control" id="createddate" name="createddate" value="<?=set_value('createddate', date('d-m-Y', strtotime($assignment->createddate)))?>" >
+                        </div>
+                        <span class="col-sm-4 control-label">
+                            <?php echo form_error('createddate'); ?>
+                        </span>
+                    </div>
+
+                    <?php
+                        if(form_error('deadlinedate'))
+                            echo "<div class='form-group has-error' >";
+                        else
                             echo "<div class='form-group' >";
                     ?>
                         <label for="deadlinedate" class="col-sm-2 control-label">
                             <?=$this->lang->line("assignment_deadlinedate")?> <span class="text-red">*</span>
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" id="deadlinedate" name="deadlinedate" value="<?=set_value('deadlinedate', date('d-m-Y'), strtotime($assignment->deadlinedate))?>" >
+                            <input type="text" class="form-control" id="deadlinedate" name="deadlinedate" value="<?=set_value('deadlinedate', date('d-m-Y', strtotime($assignment->deadlinedate)))?>" >
                         </div>
                         <span class="col-sm-4 control-label">
                             <?php echo form_error('deadlinedate'); ?>
@@ -91,35 +115,8 @@
                         </span>
                     </div>
 
-                    <?php 
-                        if(form_error('sectionID')) 
-                            echo "<div class='form-group has-error' >";
-                        else     
-                            echo "<div class='form-group' >";
-                    ?>
-                        <label for="sectionID" class="col-sm-2 control-label">
-                            <?=$this->lang->line("assignment_section")?>
-                        </label>
-                        <div class="col-sm-6">
-                            <?php
-                                $array = array();
-                                if($sections != "empty") {
-                                    foreach ($sections as $section) {
-                                        $array[$section->sectionID] = $section->section;
-                                    }
-                                }
-                                
-                                echo form_multiselect("sectionID[]", $array, set_value("sectionID", $sectionID), "id='sectionID' class='form-control select2'");
-                            ?>
-                        </div>
-                 
-                        <span class="col-sm-4 control-label">
-                            <?php echo form_error('sectionID'); ?>
-                        </span>
-                    </div>
-
-                    <?php 
-                        if(form_error('subjectID')) 
+                    <?php
+                        if(form_error('subjectID'))
                             echo "<div class='form-group has-error' >";
                         else     
                             echo "<div class='form-group' >";
@@ -197,13 +194,18 @@ $("#deadlinedate").datepicker({
         endDate:'<?=$schoolyearsessionobj->endingdate?>',
     });
 
+$("#createddate").datepicker({
+        autoclose: true,
+        format: 'dd-mm-yyyy',
+        startDate:'<?=$schoolyearsessionobj->startingdate?>',
+        endDate:'<?=$schoolyearsessionobj->endingdate?>',
+    });
+
 $('#classesID').change(function(event) {
     var classesID = $(this).val();
     if(classesID === '0') {
         $('#subjectID').val(0);
-        $('#sectionID').val('');
     } else {
-        $('#sectionID').val('');
         $.ajax({
             type: 'POST',
             url: "<?=base_url('assignment/subjectcall')?>",
@@ -211,16 +213,6 @@ $('#classesID').change(function(event) {
             dataType: "html",
             success: function(data) {
                $('#subjectID').html(data);
-            }
-        });
-
-        $.ajax({
-            type: 'POST',
-            url: "<?=base_url('assignment/sectioncall')?>",
-            data: "id=" + classesID,
-            dataType: "html",
-            success: function(data) {
-               $('#sectionID').html(data);
             }
         });
     }

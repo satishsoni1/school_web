@@ -24,6 +24,7 @@ class Sattendance extends Api_Controller
 		$this->load->library('twilio');
 		$this->load->library('bulk');
 		$this->load->library('msg91');
+		$this->load->library('notification_lib');
 		$this->load->model("subjectattendance_m");
 
         $this->lang->load('sattendance', $this->data['language']);
@@ -603,6 +604,20 @@ class Sattendance extends Api_Controller
 				}
 
 				if($updateStatus) {
+					// Notify the students (+ parents) whose attendance was just saved.
+					$rosterData = array('schoolyearID' => $schoolyearID, 'classesID' => $classesID, 'sectionID' => $sectionID, 'monthyear' => $monthyear);
+					$roster = $this->data['siteinfos']->attendance == "subject"
+						? $this->subjectattendance_m->get_order_by_sub_attendance(array_merge($rosterData, array('subjectID' => $subjectID)))
+						: $this->sattendance_m->get_order_by_attendance($rosterData);
+					$studentIDs = pluck($roster, 'studentID');
+					$this->notification_lib->notify(array(
+						'title' => 'Attendance Updated',
+						'message' => 'Your attendance has been marked for ' . $day . '-' . $monthyear . '.',
+						'type' => 'attendance',
+						'referenceID' => $classesID,
+						'recipients' => $this->notification_lib->studentsToRecipients($studentIDs),
+					));
+
 				    $this->response([
 		                'status' => true,
 		                'message' => 'Success',

@@ -46,6 +46,11 @@
         <link rel="stylesheet" href="<?php echo base_url('assets/inilabs/combined.css'); ?>" >
         <link rel="stylesheet" href="<?php echo base_url('assets/ajaxloder/ajaxloder.css'); ?>" >
 
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="<?php echo base_url('assets/css/ppg-theme.css'); ?>">
+
         <?php
             if(isset($headerassets)) {
                 foreach ($headerassets as $assetstype => $headerasset) {

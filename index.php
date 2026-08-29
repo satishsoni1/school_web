@@ -62,7 +62,7 @@ require_once __DIR__.'/mvc/helpers/site_helper.php';
 if (!preg_match("/^(127\.0\.|10\.0\.).+/i", getIpAddress())) {
     $_SERVER['CI_ENV'] = 'production';
 }
-
+$_SERVER['CI_ENV'] = 'production';
 
 define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
 

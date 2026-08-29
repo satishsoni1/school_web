@@ -179,8 +179,16 @@ class Holiday extends Admin_Controller {
 						$this->alert_m->insert_alert(array('itemID' => $holidayID, "userID" => $this->session->userdata("loginuserID"), 'usertypeID' => $this->session->userdata('usertypeID'), 'itemname' => 'holiday'));
 					}
 
+					$this->notification_lib->notify(array(
+						'title' => 'New Holiday: ' . $array['title'],
+						'message' => $array['details'],
+						'type' => 'holiday',
+						'referenceID' => $holidayID,
+						'usertypeIDs' => array(2, 3, 4),
+					));
+
 					$this->session->set_flashdata('success', $this->lang->line('menu_success'));
-					redirect(base_url("holiday/index"));			
+					redirect(base_url("holiday/index"));
 				}
 			} else {
 				$this->data["subview"] = "holiday/add";

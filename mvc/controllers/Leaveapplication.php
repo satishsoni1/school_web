@@ -61,6 +61,15 @@ class Leaveapplication extends Admin_Controller
                             $array['status'] =  $this->input->post('status');
                             $array["modify_date"] = date("Y-m-d H:i:s");
                             $this->leaveapplication_m->update_leaveapplication($array, $id);
+
+                            $this->notification_lib->notify(array(
+                                'title' => 'Leave Application ' . ucfirst($array['status']),
+                                'message' => 'Your leave application has been ' . $array['status'] . '.',
+                                'type' => 'leaveapplication',
+                                'referenceID' => $id,
+                                'recipients' => array(array('userID' => $leaveapplication->create_userID, 'usertypeID' => $leaveapplication->create_usertypeID)),
+                            ));
+
                             $this->session->set_flashdata('success', $this->lang->line('menu_success'));
                             echo 'Success';
                         } else {

@@ -21,8 +21,6 @@ class Bookinvoice extends Admin_Controller
     {
 
         parent::__construct();
-        error_reporting(E_ALL);
-ini_set('display_errors', '1');
 
         $this->load->model("tempstudent_m");
         $this->load->model("studentrelation_m");

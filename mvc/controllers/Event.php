@@ -180,6 +180,14 @@ class Event extends Admin_Controller {
 						$this->alert_m->insert_alert(array('itemID' => $eventID, "userID" => $this->session->userdata("loginuserID"), 'usertypeID' => $this->session->userdata('usertypeID'), 'itemname' => 'event'));
 					}
 
+					$this->notification_lib->notify(array(
+						'title' => 'New Event: ' . $array['title'],
+						'message' => $array['details'],
+						'type' => 'event',
+						'referenceID' => $eventID,
+						'usertypeIDs' => array(2, 3, 4),
+					));
+
 					$this->session->set_flashdata('success', $this->lang->line('menu_success'));
 					redirect(base_url("event/index"));
 				}

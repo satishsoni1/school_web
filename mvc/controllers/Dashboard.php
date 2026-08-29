@@ -55,7 +55,12 @@ class Dashboard extends Admin_Controller
         $this->load->model('maininvoice_m');
         $this->load->model('studentrelation_m');
         $this->load->model('tempstudent_m');
-        
+        $this->load->model('leaveapplication_m');
+        $this->load->model('complain_m');
+        $this->load->model('tattendance_m');
+        $this->load->model('examschedule_m');
+        $this->load->model('mark_m');
+
         $language = $this->session->userdata('lang');
         $this->lang->load('dashboard', $language);
 
@@ -364,9 +369,12 @@ class Dashboard extends Admin_Controller
 
         $this->_tails();
         $this->_attendanceGraph();
-        $this->_incomeExpenseGraph();
+        // Income/Expense graph skipped — this school doesn't record accounts in this portal.
         $this->_visitorGraph();
         $this->_profile();
+        if ($this->session->userdata('usertypeID') == 1) {
+            $this->_adminWidgets();
+        }
 
         if ((config_item('demo') === false) && ($this->data['siteinfos']->auto_update_notification == 1) && ($this->session->userdata('usertypeID') == 1) && ($this->session->userdata('loginuserID') == 1)) {
             if ($this->session->userdata('updatestatus') === null) {
@@ -452,6 +460,152 @@ class Dashboard extends Admin_Controller
         $this->data['holidays'] = $holidays;
         $this->data['events']   = $events;
         $this->data['classes']  = $classes;
+
+        // Extra counts for the admin stat-box row: fee collection + pending leave — not
+        // covered by the student/teacher/parent/subject set _tails() already builds.
+        $feeCollected = $this->payment_m->get_payment_sum('paymentamount', ['schoolyearID' => $schoolyearID]);
+        $this->data['dashboardWidget']['feecollected'] = $feeCollected ? (float) $feeCollected->paymentamount : 0;
+
+        $dueInvoices = $this->maininvoice_m->get_order_by_maininvoice([
+            'maininvoiceschoolyearID' => $schoolyearID,
+            'maininvoicedeleted_at'   => 1,
+            'maininvoicestatus !='    => 2, // 2 = fully paid; 0/1 = due/partial
+        ]);
+        $this->data['dashboardWidget']['dueinvoices'] = customCompute($dueInvoices);
+
+        $this->data['dashboardWidget']['pendingleave'] = customCompute(
+            $this->leaveapplication_m->get_order_by_leaveapplication(['status' => NULL])
+        );
+    }
+
+    // Admin-only dashboard additions: pending leave applications needing a decision, and
+    // today's birthdays (students + staff) — real, always-populated data (unlike the
+    // income/expense chart, which this school doesn't use and was removed from the dashboard).
+    private function _adminWidgets()
+    {
+        $schoolyearID = $this->session->userdata('defaultschoolyearID');
+
+        $pendingLeave = $this->leaveapplication_m->get_order_by_leaveapplication_with_user(['status' => NULL]);
+        $this->data['pendingLeaveApplications'] = customCompute($pendingLeave) ? array_slice($pendingLeave, 0, 6) : [];
+
+        $todayMD = date('m-d');
+        $birthdays = [];
+        $students = $this->studentrelation_m->get_order_by_student(['srschoolyearID' => $schoolyearID]);
+        if (customCompute($students)) {
+            foreach ($students as $student) {
+                if (!empty($student->dob) && date('m-d', strtotime($student->dob)) === $todayMD) {
+                    $birthdays[] = ['name' => $student->srname ?? $student->name, 'role' => 'Student', 'meta' => $student->srclasses ?? ''];
+                }
+            }
+        }
+        $teachers = $this->teacher_m->get_teacher();
+        if (customCompute($teachers)) {
+            foreach ($teachers as $teacher) {
+                if (!empty($teacher->dob) && date('m-d', strtotime($teacher->dob)) === $todayMD) {
+                    $birthdays[] = ['name' => $teacher->name, 'role' => 'Teacher', 'meta' => ''];
+                }
+            }
+        }
+        $this->data['todaysBirthdays'] = $birthdays;
+
+        // Staff attendance today — separate dataset from the student attendance graph above
+        // (tattendance stores one row per teacher per month, with a per-day column a1..a31).
+        $today = (int) date('j');
+        $monthyear = date('m-Y');
+        $todayCounts = ['present' => 0, 'absent' => 0, 'leave' => 0, 'late' => 0, 'unmarked' => 0];
+        $todaysTattendance = $this->tattendance_m->get_order_by_tattendance(['monthyear' => $monthyear, 'schoolyearID' => $schoolyearID]);
+        $totalTeachers = customCompute($teachers);
+        if (customCompute($todaysTattendance)) {
+            $col = 'a' . $today;
+            foreach ($todaysTattendance as $row) {
+                $status = isset($row->$col) ? strtoupper((string) $row->$col) : '';
+                if ($status === 'P') {
+                    $todayCounts['present']++;
+                } elseif ($status === 'A') {
+                    $todayCounts['absent']++;
+                } elseif ($status === 'L') {
+                    $todayCounts['late']++;
+                } elseif ($status === 'LE') {
+                    $todayCounts['leave']++;
+                }
+            }
+        }
+        $marked = $todayCounts['present'] + $todayCounts['absent'] + $todayCounts['leave'] + $todayCounts['late'];
+        $todayCounts['unmarked'] = max(0, $totalTeachers - $marked);
+        $this->data['staffAttendanceToday'] = $todayCounts;
+
+        // Recent complaints — always-populated admin action item; the module has no
+        // open/resolved status field, so this is simply the latest few filed.
+        $recentComplaints = $this->complain_m->get_order_by_complain(['schoolyearID' => $schoolyearID]);
+        $this->data['recentComplaints'] = customCompute($recentComplaints) ? array_slice($recentComplaints, 0, 5) : [];
+
+        // Student attendance today — a quick "where do we stand right now" snapshot,
+        // separate from the class-wise trend chart _attendanceGraph() already builds.
+        // Handles both attendance modes this site supports: one row per student per day
+        // ("day" mode, sattendance) or one row per student+subject per day ("subject"
+        // mode, sub_attendance — collapsed to one status per student so a student isn't
+        // counted more than once just for having several subjects marked today).
+        $studentCounts = ['present' => 0, 'absent' => 0, 'leave' => 0, 'late' => 0, 'unmarked' => 0];
+        $totalStudents = customCompute($students);
+        $col = 'a' . $today;
+        if (($this->data['siteinfos']->attendance ?? 'day') == 'subject') {
+            $rows = $this->subjectattendance_m->get_order_by_sub_attendance(['schoolyearID' => $schoolyearID, 'monthyear' => $monthyear]);
+            $perStudent = [];
+            if (customCompute($rows)) {
+                foreach ($rows as $row) {
+                    $status = isset($row->$col) ? strtoupper((string) $row->$col) : '';
+                    if ($status === '') {
+                        continue;
+                    }
+                    // If any subject already marked this student present today, keep that;
+                    // otherwise take whatever status is seen first (absent/late/leave).
+                    if (!isset($perStudent[$row->studentID]) || in_array($status, ['P', 'L', 'LE'])) {
+                        $perStudent[$row->studentID] = $status;
+                    }
+                }
+            }
+            foreach ($perStudent as $status) {
+                if ($status === 'P') {
+                    $studentCounts['present']++;
+                } elseif ($status === 'A') {
+                    $studentCounts['absent']++;
+                } elseif ($status === 'L') {
+                    $studentCounts['late']++;
+                } elseif ($status === 'LE') {
+                    $studentCounts['leave']++;
+                }
+            }
+        } else {
+            $rows = $this->sattendance_m->get_order_by_attendance(['schoolyearID' => $schoolyearID, 'monthyear' => $monthyear]);
+            if (customCompute($rows)) {
+                foreach ($rows as $row) {
+                    $status = isset($row->$col) ? strtoupper((string) $row->$col) : '';
+                    if ($status === 'P') {
+                        $studentCounts['present']++;
+                    } elseif ($status === 'A') {
+                        $studentCounts['absent']++;
+                    } elseif ($status === 'L') {
+                        $studentCounts['late']++;
+                    } elseif ($status === 'LE') {
+                        $studentCounts['leave']++;
+                    }
+                }
+            }
+        }
+        $studentMarked = $studentCounts['present'] + $studentCounts['absent'] + $studentCounts['leave'] + $studentCounts['late'];
+        $studentCounts['unmarked'] = max(0, $totalStudents - $studentMarked);
+        $this->data['studentAttendanceToday'] = $studentCounts;
+
+        // Upcoming exams — real schedule data (examschedule joined with exam/classes/subject),
+        // plus a simple honest count of marks entered this year (not broken into a
+        // pending/complete ratio — that would need to know every expected class/subject/exam
+        // combination, which varies too much by school setup to compute reliably here).
+        $upcomingExams = $this->examschedule_m->get_join_examschedule_with_exam_classes_section_subject([
+            'schoolyearID' => $schoolyearID,
+            'edate >='     => date('Y-m-d'),
+        ]);
+        $this->data['upcomingExams'] = customCompute($upcomingExams) ? array_slice($upcomingExams, 0, 6) : [];
+        $this->data['marksEnteredCount'] = customCompute($this->mark_m->get_order_by_mark(['schoolyearID' => $schoolyearID]));
     }
 
     private function _attendanceGraph()

@@ -27,6 +27,7 @@ class Admin_Controller extends MY_Controller {
         $this->load->model("holiday_m");
         $this->load->model("schoolyear_m");
         $this->load->model("alert_m");
+        $this->load->library("notification_lib");
         $this->load->library("session");
         $this->load->helper('language');
         $this->load->helper('date');

@@ -348,7 +348,7 @@ class Holisticreport extends Admin_Controller
         
         $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
         $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1];
+        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
        
         if($classesID == 1){
                 $student = $this->sattendance_m->get_student_attendance_master($studentID);
@@ -702,7 +702,7 @@ class Holisticreport extends Admin_Controller
         $this->data['attendance_report'] = $attendance_results;
         $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
         $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1];
+        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_4', $this->data);
     }
@@ -973,7 +973,7 @@ class Holisticreport extends Admin_Controller
         $this->data['attendance_report'] = $attendance_results;
         $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
         $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1];
+        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_5', $this->data);
     }
@@ -1092,7 +1092,7 @@ class Holisticreport extends Admin_Controller
         $this->data['attendance_report'] = $attendance_results;
         $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
         $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1];
+        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_6', $this->data);
     }

@@ -6,6 +6,8 @@ $lang['slno'] = "#";
 $lang['notice_title'] = "Title";
 $lang['notice_notice'] = "Notice";
 $lang['notice_date'] = "Date";
+$lang['notice_classes'] = "Class";
+$lang['notice_all_classes'] = "All Classes";
 $lang['action'] = "Action";
 
 $lang['view'] = 'View';
