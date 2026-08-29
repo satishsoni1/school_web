@@ -1,0 +1,217 @@
+
+/* ── Alerts ─────────────────────────────────────────── */
+.alert {
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+.alert-success { background: var(--green-light); color: #166534; border: 1px solid #86efac; }
+.alert-error   { background: var(--red-light); color: #991b1b; border: 1px solid #fca5a5; }
+
+/* ── Page Header ────────────────────────────────────── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+.page-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+/* ── Cards ──────────────────────────────────────────── */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Table ──────────────────────────────────────────── */
+.table-responsive { overflow-x: auto; }
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.table th {
+    background: #f1f5f9;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+}
+.table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.table tr:hover td { background: #f8fafc; }
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-primary { background: var(--orange); color: #fff; }
+.btn-primary:hover { background: #ea6c00; transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--text); border: 2px solid var(--border); }
+.btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+.btn-info    { background: var(--blue-light); color: #1d4ed8; }
+.btn-warning { background: #fef3c7; color: #92400e; }
+.btn-success { background: var(--green-light); color: #15803d; }
+.btn-danger  { background: var(--red-light); color: #dc2626; }
+.btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+.btn-lg { padding: 12px 28px; font-size: 1rem; }
+
+/* ── Badges ─────────────────────────────────────────── */
+.badge { padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+.badge-blue { background: var(--blue-light); color: #1d4ed8; }
+
+/* ── Actions in table ───────────────────────────────── */
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── Empty State ────────────────────────────────────── */
+.empty-state { text-align: center; padding: 4rem 2rem; }
+.empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+
+/* ── Form Sections ──────────────────────────────────── */
+.form-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    color: #fff;
+}
+.section-header.orange { background: linear-gradient(135deg, #f97316, #fb923c); }
+.section-header.red    { background: linear-gradient(135deg, #ef4444, #f87171); }
+.section-header.green  { background: linear-gradient(135deg, #22c55e, #4ade80); }
+.section-header.blue   { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+.section-header.purple { background: linear-gradient(135deg, #a855f7, #c084fc); }
+
+.section-header h2 { font-family: 'Baloo 2', cursive; font-size: 1.1rem; font-weight: 700; }
+.section-header small { opacity: 0.85; font-size: 0.78rem; }
+.section-icon { font-size: 1.3rem; }
+
+.form-section > .form-grid,
+.form-section > .table-responsive,
+.form-section > .form-group,
+.form-section > .cg-block { padding: 20px; }
+
+/* ── Form Grid ──────────────────────────────────────── */
+.form-grid { display: grid; gap: 16px; }
+.form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.form-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.form-group-full { grid-column: 1 / -1; }
+
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-weight: 700; font-size: 0.85rem; color: var(--text-muted); }
+
+.form-control {
+    padding: 9px 12px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    width: 100%;
+}
+.form-control:focus { outline: none; border-color: var(--orange); }
+
+textarea.form-control { resize: vertical; min-height: 60px; }
+
+.label-heading { font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: block; }
+
+/* ── Checkboxes ─────────────────────────────────────── */
+.checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 4px 0;
+}
+.checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--orange); }
+
+/* ── Grade Select ────────────────────────────────────── */
+.grade-select {
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.82rem;
+    width: 100%;
+    background: #f8fafc;
+}
+
+/* ── CG Tables ───────────────────────────────────────── */
+.cg-block { padding: 0 20px 20px; }
+.cg-title { font-size: 0.95rem; font-weight: 700; color: #1e3a5f; margin-bottom: 8px; }
+.cg-table { font-size: 0.82rem; }
+.cg-table th { background: #e0f2fe; font-size: 0.8rem; padding: 6px 8px; text-align: center; }
+.cg-table td { padding: 6px 8px; }
+.indicator-cell { font-size: 0.82rem; max-width: 300px; }
+.grade-cell { text-align: center; }
+.grade-radio { width: 18px; height: 18px; accent-color: var(--orange); cursor: pointer; }
+
+/* ── Attendance Table ────────────────────────────────── */
+.attendance-table th, .attendance-table td { text-align: center; padding: 5px; font-size: 0.8rem; }
+.att-input { width: 50px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; text-align: center; font-size: 0.8rem; }
+
+/* ── Term Labels ─────────────────────────────────────── */
+.term-label { font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700; margin-bottom: 12px; padding: 6px 12px; border-radius: 20px; display: inline-block; }
+.term1 { background: #fde68a; color: #92400e; }
+.term2 { background: #bbf7d0; color: #166534; }
+
+/* ── Measurement Box ─────────────────────────────────── */
+.measurement-box { background: #f8fafc; border-radius: var(--radius-sm); padding: 16px; }
+
+/* ── Activity Row ────────────────────────────────────── */
+.activity-row { margin-bottom: 6px; }
+
+/* ── Preview Image ───────────────────────────────────── */
+.preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; border: 2px solid var(--border); }
+
+/* ── Signature Block ─────────────────────────────────── */
+.signature-block { background: #f8fafc; padding: 16px; border-radius: var(--radius-sm); }
+.mt-5 { margin-top: 5px; }
+
+/* ── Form Actions ────────────────────────────────────── */
+.form-actions { display: flex; gap: 12px; padding: 1.5rem 0; justify-content: center; }
+
+/* ── Footer ──────────────────────────────────────────── */
+.site-footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem; }
+
+.req { color: var(--red); }
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+    .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+    .main-content { padding: 1rem; }
+    .page-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+    .table { font-size: 0.8rem; }
+    .actions { flex-wrap: wrap; }
+}

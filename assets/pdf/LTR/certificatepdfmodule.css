@@ -1,0 +1,108 @@
+body {
+    margin: 0;
+    font-family: "Times New Roman", Times, serif; 
+    color:#000;
+}
+
+.site-header-title-float {
+    text-align: left;
+}
+
+.top-site-header-title {
+    margin-top:15px;
+    font-size:20px;
+}
+
+.top-site-header-create-title {
+    margin-top:35px;
+}
+
+.table {
+    /* border-collapse: collapse !important; */
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.table td,
+.table th {
+    background-color: #fff !important;
+    padding: 5px;
+    /* border: 1px solid #000 !important; */
+    line-height: 1.32857143;
+    vertical-align: top;
+    
+}
+
+.table-bordered {
+    border: 1px solid #000;
+}
+
+.table-bordered > tr > th,
+.table-bordered > tr > td,
+.table-bordered > thead > tr > th,
+.table-bordered > thead > tr > td {
+    border-bottom-width: 2px;
+}
+
+.pull-right {
+    text-align: right !important;
+}
+.pull-left {
+    text-align: left !important;
+}
+.underline{
+    border-bottom: #000 solid 1px;
+    display: inline-block; /* Make the span behave like a block element */
+    width: 200px;
+}
+
+.underline-container {
+    position: relative; /* Enable relative positioning for layering */
+  }
+  
+  .underline-container:after {
+    content: ""; /* Add pseudo-element for the line */
+    position: absolute; /* Position the line absolutely within the container */
+    bottom: 0; /* Place the line at the bottom */
+    left: 0; /* Start the line from the left edge */
+    width: 100%; /* Stretch the line across the container width */
+    height: 1px; /* Set the line height (border thickness) */
+    background-color: #ccc; /* Set the line color */
+  }
+  
+  .underline-text {
+    display: inline-block; /* Allow text to wrap naturally */
+    width: 20px; /* Set the width for the text area */
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
