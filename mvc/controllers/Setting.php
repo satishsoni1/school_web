@@ -243,6 +243,7 @@ Class Setting extends Admin_Controller {
         $this->data['schoolyears']  = $this->schoolyear_m->get_order_by_schoolyear([ 'schooltype' => 'classbase' ]);
         $this->data['themes']       = $this->themes_m->get_order_by_themes([ 'backend' => 1 ]);
         $this->data['classes']      = $this->classes_m->general_get_classes();
+        $this->data['frontendThemes'] = $this->getFrontendThemes();
 
         if ( $this->data['setting'] ) {
             if ( $_POST ) {
@@ -358,6 +359,40 @@ Class Setting extends Admin_Controller {
         }
 
         $this->setting_m->update_setting('backend_theme', $themeName);
+        echo $themeName;
+    }
+
+    /**
+     * Additive: lists the public-website (frontend) themes available on disk so
+     * the setting screen can offer a picker without needing a dedicated DB table.
+     * Does not alter backendtheme() or any other existing behaviour.
+     */
+    public function getFrontendThemes()
+    {
+        $themes = [];
+        $base   = FCPATH . 'frontend' . DIRECTORY_SEPARATOR;
+        if ( is_dir($base) ) {
+            foreach ( scandir($base) as $entry ) {
+                if ( $entry === '.' || $entry === '..' || !is_dir($base . $entry) ) {
+                    continue;
+                }
+                $themes[] = strtolower($entry);
+            }
+        }
+        sort($themes);
+        return $themes;
+    }
+
+    public function frontendtheme()
+    {
+        $themeName    = htmlentities(escapeString(strtolower($this->input->post('theme'))));
+        $validThemes  = $this->getFrontendThemes();
+
+        if ( !in_array($themeName, $validThemes, true) ) {
+            $themeName = 'default';
+        }
+
+        $this->setting_m->insertorupdate([ 'frontend_theme' => $themeName ]);
         echo $themeName;
     }
 

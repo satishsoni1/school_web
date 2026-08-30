@@ -1,5 +1,5 @@
 RewriteEngine on
-RewriteCond $1 !^(index\.php|assets|uploads|documentation|md|robots\.txt|privacy\.html)
+RewriteCond $1 !^(index\.php|assets|uploads|documentation|md|robots\.txt|privacy\.html|frontend/[^/]+/assets)
 RewriteRule ^(.*)$ index.php/$1 [L]
 RewriteCond %{HTTP:Authorization} ^(.+)$
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

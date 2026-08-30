@@ -1,0 +1,80 @@
+a:3:{s:4:"time";i:1788073254;s:3:"ttl";i:3600;s:4:"data";s:4213:"
+
+<?php $this->_section_start('content'); ?>
+
+    <?php if(customCompute($sliders)): ?>
+        <div class="pg-hero">
+            <?php $i = 0; ?>
+            <?php foreach($sliders as $slider): ?>
+                <div class="pg-hero-slide <?php if($i == 0): ?> is-active <?php endif; ?>">
+                    <img src="<?php echo  base_url('uploads/gallery/'.$slider->file_name) ; ?>" alt="">
+                    <div class="pg-hero-overlay">
+                        <div class="pg-container">
+                            <div class="pg-hero-caption">
+                                <h1><?php echo  sentenceMap(htmlspecialchars_decode($slider->file_title), 17, '<span>', '</span>') ; ?></h1>
+                                <p><?php echo  htmlspecialchars_decode($slider->file_description) ; ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php $i++; ?>
+            <?php endforeach; ?>
+            <div class="pg-hero-dots"></div>
+        </div>
+    <?php endif; ?>
+
+    <div class="pg-pagehead">
+        <div class="pg-container pg-pagehead-inner">
+            <h1><?php echo  $page->title ; ?></h1>
+            <nav class="pg-breadcrumb">
+                <a href="<?php echo  base_url('frontend/'.$homepageType.'/'.$homepage->url) ; ?>"><?php echo  $homepageTitle ; ?></a>
+                <span class="sep">/</span>
+                <span class="current"><?php echo  $page->title ; ?></span>
+            </nav>
+        </div>
+    </div>
+
+    <section class="pg-section">
+        <div class="pg-container">
+            <div class="pg-grid pg-grid--4">
+                <?php if(customCompute($teachers)): ?>
+                    <?php foreach($teachers as $teacher): ?>
+                        <div class="pg-card pg-staff-card">
+                            <div class="pg-staff-photo"><img src="<?php echo  imagelink($teacher->photo) ; ?>" alt=""></div>
+                            <h4><?php echo  namesorting($teacher->name, 18) ; ?></h4>
+                            <div class="pg-staff-role"><?php echo  $teacher->designation ; ?></div>
+                            <div class="pg-staff-meta">
+                                <?php if(frontendData::get_frontend('teacher_email_status')): ?>
+                                    <?php if($teacher->email): ?><div><?php echo  $teacher->email ; ?></div><?php endif; ?>
+                                <?php endif; ?>
+                                <?php if(frontendData::get_frontend('teacher_phone_status')): ?>
+                                    <?php if($teacher->phone): ?><div><?php echo  $teacher->phone ; ?></div><?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="pg-staff-social">
+                                <?php if(isset($sociallink[$teacher->usertypeID][$teacher->teacherID])): ?>
+                                    <a href="<?php echo  $sociallink[$teacher->usertypeID][$teacher->teacherID]->facebook ; ?>"><i class="fa fa-facebook"></i></a>
+                                    <a href="<?php echo  $sociallink[$teacher->usertypeID][$teacher->teacherID]->twitter ; ?>"><i class="fa fa-twitter"></i></a>
+                                    <a href="<?php echo  $sociallink[$teacher->usertypeID][$teacher->teacherID]->linkedin ; ?>"><i class="fa fa-linkedin"></i></a>
+                                    <a href="<?php echo  $sociallink[$teacher->usertypeID][$teacher->teacherID]->googleplus ; ?>"><i class="fa fa-google-plus"></i></a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+
+    <?php if(strlen($page->content) > 0): ?>
+        <section class="pg-section--tight pg-section--alt">
+            <div class="pg-container">
+                <div class="pg-prose"><?php echo  htmlspecialchars_decode($page->content) ; ?></div>
+            </div>
+        </section>
+    <?php endif; ?>
+
+<?php $this->_section_end(); ?>
+
+<?php echo $this->_include('views/layouts/master'); ?>
+";}

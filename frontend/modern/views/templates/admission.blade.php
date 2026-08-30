@@ -1,0 +1,376 @@
+@layout('views/layouts/master')
+
+@section('content')
+
+    @if(customCompute($sliders))
+        <div class="pg-hero">
+            <?php $i = 0; ?>
+            @foreach($sliders as $slider)
+                <div class="pg-hero-slide @if($i == 0) is-active @endif">
+                    <img src="{{ base_url('uploads/gallery/'.$slider->file_name) }}" alt="">
+                    <div class="pg-hero-overlay">
+                        <div class="pg-container">
+                            <div class="pg-hero-caption">
+                                <h1>{{ sentenceMap(htmlspecialchars_decode($slider->file_title), 17, '<span>', '</span>') }}</h1>
+                                <p>{{ htmlspecialchars_decode($slider->file_description) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php $i++; ?>
+            @endforeach
+            <div class="pg-hero-dots"></div>
+        </div>
+    @endif
+
+    <div class="pg-pagehead">
+        <div class="pg-container pg-pagehead-inner">
+            <h1>{{ $page->title }}</h1>
+            <nav class="pg-breadcrumb">
+                <a href="{{ base_url('frontend/'.$homepageType.'/'.$homepage->url) }}">{{ $homepageTitle }}</a>
+                <span class="sep">/</span>
+                <span class="current">{{ $page->title }}</span>
+            </nav>
+        </div>
+    </div>
+
+    @if(strlen($page->content) > 0)
+        <section class="pg-section--tight">
+            <div class="pg-container">
+                <div class="pg-prose" style="max-width:820px;">{{ htmlspecialchars_decode($page->content) }}</div>
+            </div>
+        </section>
+    @endif
+
+    <section class="pg-section" style="padding-top:0;">
+        <div class="pg-container">
+            <div class="pg-admission-wrap">
+                <div class="pg-admission-side">
+                    @if(customCompute($featured_image))
+                        <img src="{{ base_url('uploads/gallery/'.$featured_image->file_name) }}" alt="" />
+                    @else
+                        <img src="{{ base_url('uploads/images/'.frontendData::get_backend('photo')) }}" alt="" />
+                    @endif
+                    <h3>Welcome</h3>
+                    <p>We trust the following information will assist every prospective family in understanding our admissions procedure, including the documentation required to apply.</p>
+                </div>
+                <div class="pg-admission-main">
+                    <div class="pg-lookup-box">
+                        <form method="post" style="display:flex;gap:12px;flex-wrap:wrap;width:100%;">
+                            <div class="pg-field">
+                                <input type="text" class="pg-input" id="admissionID" name="admissionID" placeholder="Admission ID *" />
+                            </div>
+                            <div class="pg-field">
+                                <input type="text" class="pg-input" id="phone" name="phone" placeholder="Phone *" />
+                            </div>
+                            <button type="submit" class="pg-btn pg-btn-primary" id="getadmissionresult" style="align-self:flex-start;">Get Result</button>
+                        </form>
+                    </div>
+
+                    <div class="mainregisterForm" id="mainregisterForm">
+                        <h3 class="register-heading">Apply as a Student</h3>
+                        <form id="admissionForm" method="post" enctype="multipart/form-data">
+                            <div class="pg-grid pg-grid--2">
+                                <div>
+                                    <div class="pg-field">
+                                        <input type="text" class="pg-input" name="name" placeholder="Name *" />
+                                    </div>
+                                    <div class="pg-field">
+                                        <input type="text" class="pg-input" name="dob" id="dob" placeholder="Date of Birth *" />
+                                    </div>
+                                    <div class="pg-field">
+                                        <select class="pg-input" name="sex">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
+                                    <div class="pg-field">
+                                        <input type="text" class="pg-input" name="phone" placeholder="Phone *" />
+                                    </div>
+                                    <div class="pg-field">
+                                        <input type="text" class="pg-input" name="email" placeholder="Email" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="pg-field">
+                                        <?php
+                                            $classesArray['0'] = 'Apply Class';
+                                            foreach ($classes as $classaKey => $classa) {
+                                                if(frontendData::get_backend('ex_class') != $classa->classesID) {
+                                                    $classesArray[$classa->classesID] = $classa->classes;
+                                                }
+                                            }
+                                            echo form_dropdown("classesID", $classesArray, set_value("classesID"), "class='pg-input select2'");
+                                        ?>
+                                    </div>
+                                    <div class="pg-field">
+                                        <input type="text" class="pg-input" name="religion" placeholder="Religion *" />
+                                    </div>
+                                    <div class="pg-field">
+                                        <input type="text" class="pg-input" name="address" placeholder="Address *" />
+                                    </div>
+                                    <div class="pg-field">
+                                        <?php
+                                            $countryArray['0'] = 'Select Country';
+                                            foreach ($countrys as $countryKey => $country) {
+                                                $countryArray[$countryKey] = $country;
+                                            }
+                                            echo form_dropdown("country", $countryArray, set_value("country"), "class='pg-input select2'");
+                                        ?>
+                                    </div>
+                                    <div class="pg-field">
+                                        <label>Photo</label>
+                                        <div class="input-group image-preview">
+                                            <input placeholder="Upload Image" type="text" class="image-preview-filename" disabled="disabled">
+                                            <span class="input-group-btn">
+                                                <button type="button" class="image-preview-clear" style="display:none;">
+                                                    <i class="fa fa-remove"></i>
+                                                </button>
+                                                <div class="image-preview-input" id="image-preview-input">
+                                                    <i class="fa fa-repeat"></i>
+                                                    <span class="image-preview-input-title">Browse</span>
+                                                    <input type="file" accept="image/png, image/jpeg, image/gif" name="photo"/>
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pg-grid pg-grid--2">
+                                <div>
+                                    <label style="display:block;font-size:13px;font-weight:700;color:var(--pg-ink);margin-bottom:7px;">Document</label>
+                                    <div class="input-group document-preview">
+                                        <input type="text" class="document-preview-filename" disabled="disabled">
+                                        <span class="input-group-btn">
+                                            <button type="button" class="document-preview-clear" style="display:none;">
+                                                <i class="fa fa-remove"></i>
+                                            </button>
+                                            <div class="image-preview-input document-preview-input">
+                                                <i class="fa fa-repeat"></i>
+                                                <span class="document-preview-input-title">Browse</span>
+                                                <input type="file" id="file" name="file"/>
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
+                                    <input type="button" class="btnRegister" value="Apply"/>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+@endsection
+
+@section('headerAssetPush')
+<link type="text/css" rel="stylesheet" href="<?=base_url($frontendThemePath.'assets/vendor/select2/css/select2.css')?>">
+<link type="text/css" rel="stylesheet" href="<?=base_url($frontendThemePath.'assets/vendor/datepicker/datepicker.css')?>">
+@endsection
+
+@section('footerAssetPush')
+    <script type="text/javascript" src="<?=base_url($frontendThemePath.'assets/vendor/select2/js/select2.js')?>"></script>
+    <script type="text/javascript" src="<?=base_url($frontendThemePath.'assets/vendor/datepicker/datepicker.js')?>"></script>
+    <script type="text/javascript">
+        $('.select2').select2();
+        $('#dob').datepicker({ startView: 2 });
+        $(document).on('click', '#close-preview', function(){
+            $('.image-preview').popover('hide');
+            $('.image-preview').hover(
+                function () {
+                   $('.image-preview').popover('show');
+                   $('.content').css('padding-bottom', '100px');
+                },
+                 function () {
+                   $('.image-preview').popover('hide');
+                   $('.content').css('padding-bottom', '20px');
+                }
+            );
+        });
+
+        $(function() {
+            var closebtn = $('<button/>', {
+                type:"button",
+                text: 'x',
+                id: 'close-preview',
+                style: 'font-size: initial;',
+            });
+            closebtn.attr("class","close pull-right");
+            $('.image-preview').popover({
+                trigger:'manual',
+                html:true,
+                title: "<strong>Preview</strong>"+$(closebtn)[0].outerHTML,
+                content: "There's no image",
+                placement:'bottom'
+            });
+            $('.image-preview-clear').click(function(){
+                $('.image-preview').attr("data-content","").popover('hide');
+                $('.image-preview-filename').val("");
+                $('.image-preview-clear').hide();
+                $('#image-preview-input input:file').val("");
+                $(".image-preview-input-title").text("Browse");
+            });
+            $("#image-preview-input input:file").change(function (){
+                var img = $('<img/>', {
+                    id: 'dynamic',
+                    width:250,
+                    height:200,
+                    overflow:'hidden'
+                });
+                var file = this.files[0];
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $(".image-preview-input-title").text("Browse");
+                    $(".image-preview-clear").show();
+                    $(".image-preview-filename").val(file.name);
+                    img.attr('src', e.target.result);
+                    $(".image-preview").attr("data-content",$(img)[0].outerHTML).popover("show");
+                    $('.content').css('padding-bottom', '100px');
+                }
+                reader.readAsDataURL(file);
+            });
+        });
+
+        $(function() {
+            $('.document-preview-clear').click(function(){
+                $('.document-preview').attr("data-content","").popover('hide');
+                $('.document-preview-filename').val("");
+                $('.document-preview-clear').hide();
+                $('.document-preview-input input:file').val("");
+                $(".document-preview-input-title").text("Browse");
+            });
+
+            $(".document-preview-input input:file").change(function (){
+                var file = this.files[0];
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $(".document-preview-input-title").text("Browse");
+                    $(".document-preview-clear").show();
+                    $(".document-preview-filename").val(file.name);
+                }
+                reader.readAsDataURL(file);
+            });
+        });
+
+        function toastOptions() {
+            return {
+              "closeButton": true,
+              "debug": false,
+              "newestOnTop": false,
+              "progressBar": false,
+              "positionClass": "toast-top-right",
+              "preventDuplicates": false,
+              "onclick": null,
+              "showDuration": "500",
+              "hideDuration": "500",
+              "timeOut": "5000",
+              "extendedTimeOut": "1000",
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut"
+            };
+        }
+
+        $('.btnRegister').click(function() {
+            $('.btnRegister').prop('disabled', true);
+            var formData = new FormData($('#admissionForm')[0]);
+            $.ajax({
+                type: 'POST',
+                url: "<?=base_url('fonlineadmission/saveAdmission')?>",
+                data: formData,
+                async: true,
+                dataType: "html",
+                success: function(data) {
+                    var response = JSON.parse(data);
+                    if(response.status == false) {
+                        $('.btnRegister').prop('disabled', false);
+                        $.each(response, function(index, value) {
+                            if(index != 'status') {
+                                toastr["error"](value);
+                                toastr.options = toastOptions();
+                            }
+                        });
+                    } else {
+                        if(response.render != '') {
+                            $('#mainregisterForm').html(response.render);
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                },
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        });
+
+        $('#getadmissionresult').click(function(e) {
+            e.preventDefault();
+
+            var error = 0
+            var admissionID = $('#admissionID').val();
+            var phone       = $('#phone').val();
+
+            if(admissionID == '') {
+                error++;
+                errorMessage("The Admission ID field are required.");
+            } else {
+                if(!((Math.floor(admissionID) == admissionID) && $.isNumeric(admissionID))) {
+                    error++;
+                    errorMessage("The Admission ID field value are invalid.");
+                }
+            }
+
+            if(phone == '') {
+                error++;
+                errorMessage("The Phone field are required.");
+            }
+
+            if(error == 0) {
+                $.ajax({
+                    type: 'POST',
+                    url: "<?=base_url('fonlineadmission/getAdmission')?>",
+                    data: {'admissionID':admissionID, 'phone':phone},
+                    dataType: "html",
+                    success: function(data) {
+                        var response = JSON.parse(data);
+                        if(response.status == false) {
+                            $.each(response, function(index, value) {
+                                if(index != 'status') {
+                                    toastr["error"](value);
+                                    toastr.options = toastOptions();
+                                }
+                            });
+                        } else {
+                            if(response.render != '') {
+                                $('#mainregisterForm').html(response.render);
+                            } else {
+                                window.location.reload();
+                            }
+                        }
+                    },
+                });
+            }
+        });
+
+        function errorMessage(message) {
+            toastr["error"](message);
+            toastr.options = toastOptions();
+        }
+    </script>
+
+    <?php if ($this->session->flashdata('success')): ?>
+        <script type="text/javascript">
+            toastr["success"]("<?=$this->session->flashdata('success');?>");
+        </script>
+    <?php endif ?>
+    <?php if ($this->session->flashdata('error')): ?>
+        <script type="text/javascript">
+            toastr["error"]("<?=$this->session->flashdata('error');?>");
+        </script>
+    <?php endif ?>
+@endsection

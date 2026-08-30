@@ -1,0 +1,21 @@
+a:3:{s:4:"time";i:1788076117;s:3:"ttl";i:3600;s:4:"data";s:1200:"
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<?php
+    if (!function_exists('pgAssetVer')) {
+        function pgAssetVer($relPath) {
+            $full = FCPATH . $relPath;
+            return file_exists($full) ? filemtime($full) : time();
+        }
+    }
+?>
+<link type="text/css" rel="stylesheet" href="<?=base_url($frontendThemePath.'assets/vendor/fontawesome/css/font-awesome.min.css?v='.pgAssetVer($frontendThemePath.'assets/vendor/fontawesome/css/font-awesome.min.css'))?>">
+<link type="text/css" rel="stylesheet" href="<?=base_url($frontendThemePath.'assets/vendor/toastr/toastr.min.css?v='.pgAssetVer($frontendThemePath.'assets/vendor/toastr/toastr.min.css'))?>">
+<link type="text/css" rel="stylesheet" href="<?=base_url($frontendThemePath.'assets/css/theme.css?v='.pgAssetVer($frontendThemePath.'assets/css/theme.css'))?>">
+
+<?php echo $this->_yield('headerAssetPush'); ?>
+";}

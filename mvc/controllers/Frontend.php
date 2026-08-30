@@ -28,7 +28,17 @@
             $this->load->model('pages_m');
             $this->load->model('media_gallery_m');
             $this->load->model('slider_m');
-            redirect(base_url('signin/index'));
+
+            // Respect the "Enable/Disable frontend site" setting (Setting > General
+            // Setting). When the public website is disabled, every frontend/* route
+            // sends visitors straight to the login screen instead of rendering it.
+            // When enabled, the site renders normally (this also matches the
+            // default_controller routes.php is rewritten to by Setting::_frontendSetUp()
+            // / _backendSetUp() when this setting is saved).
+            $frontendEnabled = ( $this->data['backend_setting']->frontendorbackend === 'YES' || $this->data['backend_setting']->frontendorbackend == 1 );
+            if ( !$frontendEnabled ) {
+                redirect(base_url('signin/index'));
+            }
         }
 
         public function index()

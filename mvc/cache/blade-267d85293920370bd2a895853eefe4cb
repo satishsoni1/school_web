@@ -1,0 +1,63 @@
+a:3:{s:4:"time";i:1788069275;s:3:"ttl";i:3600;s:4:"data";s:3059:"
+
+<?php $this->_section_start('content'); ?>
+
+    <div class="pg-pagehead">
+        <div class="pg-container pg-pagehead-inner">
+            <h1><?php echo  $eventView->title ; ?></h1>
+            <nav class="pg-breadcrumb">
+                <a href="<?php echo  base_url('frontend') ; ?>">Home</a>
+                <span class="sep">/</span>
+                <span class="current">Event</span>
+            </nav>
+        </div>
+    </div>
+
+    <section class="pg-section">
+        <div class="pg-container">
+            <div class="pg-grid" style="grid-template-columns: 2.2fr 1fr;">
+                <div class="pg-detail-card">
+                    <div class="pg-event-detail-media">
+                        <img src="<?php echo  imageLinkWithDefatulImage($eventView->photo, 'holiday.png') ; ?>" alt="">
+                    </div>
+                    <div class="pg-detail-meta">
+                        <span><i class="fa fa-calendar"></i>
+                            <?php echo  date("d M Y", strtotime($eventView->fdate)) ; ?>
+                            <?php if($eventView->fdate != $eventView->tdate): ?>
+                                &ndash;
+                                <?php echo  date("d M Y", strtotime($eventView->tdate)) ; ?>
+                            <?php endif; ?>
+                        </span>
+                        <span><i class="fa fa-clock-o"></i> <?php echo  date("h:i A", strtotime($eventView->ftime)) ; ?> - <?php echo  date("h:i A", strtotime($eventView->ttime)) ; ?></span>
+                    </div>
+                    <div class="pg-prose"><?php echo  $eventView->details ; ?></div>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom:16px;">Recent Events</h4>
+                    <div class="pg-sidebar-list">
+                        <?php if(customCompute($events)): ?>
+                            <?php $i = 1; ?>
+                            <?php foreach($events as $event): ?>
+                                <?php if($i <= 6): ?>
+                                    <a href="<?php echo  base_url('frontend/event/'.$event->eventID) ; ?>" class="pg-sidebar-event">
+                                        <img src="<?php echo  imageLinkWithDefatulImage($event->photo, 'holiday.png') ; ?>" alt="">
+                                        <div>
+                                            <h4><?php echo  namesorting($event->title, 40) ; ?></h4>
+                                            <span><?php echo  date("h:i A", strtotime($event->ftime)) ; ?> - <?php echo  date("h:i A", strtotime($event->ttime)) ; ?></span>
+                                        </div>
+                                    </a>
+                                <?php endif; ?>
+                                <?php $i++; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<?php $this->_section_end(); ?>
+
+<?php echo $this->_include('views/layouts/master'); ?>
+";}

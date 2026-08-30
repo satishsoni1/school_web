@@ -16,128 +16,268 @@
     <!-- iNilabs css -->
     <link href="<?php echo base_url($backendThemePath . '/inilabs.css'); ?>" rel="stylesheet" type="text/css">
     <link href="<?php echo base_url('assets/inilabs/responsive.css'); ?>" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        .form-box-new .header {
-            -webkit-border-top-left-radius: 4px;
-            -webkit-border-top-right-radius: 4px;
-            -webkit-border-bottom-right-radius: 0;
-            -webkit-border-bottom-left-radius: 0;
-            -moz-border-radius-topleft: 4px;
-            -moz-border-radius-topright: 4px;
-            -moz-border-radius-bottomright: 0;
-            -moz-border-radius-bottomleft: 0;
-            border-top-left-radius: 4px;
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 0;
-            border-bottom-left-radius: 0;
-            background: none repeat scroll 0 0 #1A2229;
-            box-shadow: inset 0px -3px 0px rgba(0, 0, 0, 0.2);
-            padding: 20px 10px;
+        :root {
+            --auth-primary: #0D9488;
+            --auth-primary-dark: #0F766E;
+            --auth-panel-1: #115E59;
+            --auth-panel-2: #0A3D39;
+            --auth-bg: #F1F5F9;
+            --auth-surface: #FFFFFF;
+            --auth-text: #0F172A;
+            --auth-text-muted: #64748B;
+            --auth-border: #E2E8F0;
+            --auth-danger: #DC2626;
+            --auth-danger-bg: #FEF2F2;
+            --auth-success: #059669;
+            --auth-success-bg: #ECFDF5;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body.white-bg-login {
+            margin: 0;
+            background: var(--auth-bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--auth-text);
+        }
+
+        .auth-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* -------- Left brand panel (desktop only) -------- */
+        .auth-brand-panel {
+            position: relative;
+            flex: 0 0 42%;
+            max-width: 42%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+            overflow: hidden;
+            background: linear-gradient(160deg, var(--auth-panel-1) 0%, var(--auth-panel-2) 100%);
+        }
+
+        .auth-brand-panel::before,
+        .auth-brand-panel::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(13, 148, 136, 0.35);
+            filter: blur(10px);
+        }
+
+        .auth-brand-panel::before {
+            width: 340px;
+            height: 340px;
+            top: -120px;
+            left: -100px;
+            background: rgba(45, 212, 191, 0.25);
+        }
+
+        .auth-brand-panel::after {
+            width: 260px;
+            height: 260px;
+            bottom: -90px;
+            right: -70px;
+            background: rgba(13, 148, 136, 0.30);
+        }
+
+        .auth-brand-content {
+            position: relative;
+            z-index: 1;
+            max-width: 380px;
             text-align: center;
+            color: #ffffff;
+        }
+
+        .auth-logo-ring {
+            width: 108px;
+            height: 108px;
+            margin: 0 auto 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.05);
+        }
+
+        .auth-logo-ring img {
+            /* width: 68px;
+            height: 68px; */
+            border-radius: 50%;
+            object-fit: cover;
+            background: #fff;
+        }
+
+        .auth-brand-content h1 {
             font-size: 26px;
-            font-weight: 300;
-            color: #fff;
-        }
-        .form-box-new {
-  width: 360px;
-  margin: 10px auto 0 auto;
-}
-.form-box-new .header {
-  -webkit-border-top-left-radius: 4px;
-  -webkit-border-top-right-radius: 4px;
-  -webkit-border-bottom-right-radius: 0;
-  -webkit-border-bottom-left-radius: 0;
-  -moz-border-radius-topleft: 4px;
-  -moz-border-radius-topright: 4px;
-  -moz-border-radius-bottomright: 0;
-  -moz-border-radius-bottomleft: 0;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-  background: none repeat scroll 0 0 #1A2229;
-  box-shadow: inset 0px -3px 0px rgba(0, 0, 0, 0.2);
-  padding: 20px 10px;
-  text-align: center;
-  font-size: 26px;
-  font-weight: 300;
-  color: #fff;
-}
-.form-box-new .body,
-.form-box-new .footer {
-  padding: 10px 20px;
-  background: #fff;
-  color: #444;
-}
-.form-box-new .body > .form-group,
-.form-box-new .footer > .form-group {
-  margin-top: 20px;
-}
-.form-box-new .body > .form-group > input,
-.form-box-new .footer > .form-group > input {
-  border: #fff;
-}
-.form-box-new .body > .btn,
-.form-box-new .footer > .btn {
-  margin-bottom: 10px;
-}
-.form-box-new .footer {
-  -webkit-border-top-left-radius: 0;
-  -webkit-border-top-right-radius: 0;
-  -webkit-border-bottom-right-radius: 4px;
-  -webkit-border-bottom-left-radius: 4px;
-  -moz-border-radius-topleft: 0;
-  -moz-border-radius-topright: 0;
-  -moz-border-radius-bottomright: 4px;
-  -moz-border-radius-bottomleft: 4px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 4px;
-  border-bottom-left-radius: 4px;
-}
-@media (max-width: 767px) {
-  .form-box-new {
-    width: 90%;
-  }
-}
-
-
-        .form-box-new .body,
-        .form-box-new .footer {
-            border-radius: 0px 0px 4px 4px;
-            -moz-border-radius: 0px 0px 4px 4px;
-            -webkit-border-radius: 0px 0px 4px 4px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin: 0 0 12px;
         }
 
-        .form-box-new .body>.form-group>input,
-        .form-box-new .footer>.form-group>input {
-            border: 1px solid #E2E7EB;
-            box-shadow: 0 0 0 rgba(0, 0, 0, 0.070) inset;
+        .auth-brand-content p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.78);
+            margin: 0;
+        }
+
+        .auth-brand-features {
+            list-style: none;
+            margin: 32px 0 0;
+            padding: 0;
+            text-align: left;
+            display: inline-block;
+        }
+
+        .auth-brand-features li {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-brand-features li i {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        /* -------- Right form panel -------- */
+        .auth-form-panel {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
+        }
+
+        .auth-form-panel-inner {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-mobile-brand {
+            display: none;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-mobile-brand img {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25);
+        }
+
+        .auth-mobile-brand h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 12px 0 0;
+            color: var(--auth-text);
+        }
+
+        .auth-card {
+            background: var(--auth-surface);
+            border-radius: 18px;
+            padding: 40px 36px;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.04);
+        }
+
+        .auth-card h3.auth-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin: 0 0 6px;
+            color: var(--auth-text);
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            color: var(--auth-text-muted);
+            margin: 0 0 26px;
+        }
+
+        .auth-footer-note {
+            text-align: center;
+            font-size: 12px;
+            color: var(--auth-text-muted);
+            margin-top: 22px;
+        }
+
+        @media (max-width: 991px) {
+            .auth-brand-panel {
+                display: none;
+            }
+
+            .auth-mobile-brand {
+                display: block;
+            }
+
+            .auth-card {
+                padding: 32px 24px;
+            }
         }
     </style>
 </head>
 
 <body class="white-bg-login">
 
-    <div class="col-md-4 col-md-offset-4 marg" style="margin-top:30px;">
-        <?php
-        if (customCompute($siteinfos->photo)) {
-            echo "<center><img width='25%' src=" . base_url('uploads/images/' . $siteinfos->photo) . " /></center>";
-        }
-        ?>
-        <center>
-            <h4><?php echo namesorting($siteinfos->sname, 50); ?></h4>
-        </center>
-    </div>
-    <div class="col-md-4 col-md-offset-4 marg">
-        <?php $this->load->view($subview); ?>
-    </div>
+    <div class="auth-wrapper">
+        <div class="auth-brand-panel">
+            <div class="auth-brand-content">
+                <div class="auth-logo-ring">
+                    <?php if (customCompute($siteinfos->photo)) : ?>
+                        <img src="<?= base_url('uploads/images/' . $siteinfos->photo) ?>" alt="<?= htmlspecialchars($siteinfos->sname) ?>">
+                    <?php else : ?>
+                        <i class="fa fa-graduation-cap" style="font-size:34px;color:#fff;"></i>
+                    <?php endif; ?>
+                </div>
+                <h1><?php echo namesorting($siteinfos->sname, 50); ?></h1>
+                <p>Welcome back. Sign in to manage attendance, academics, fees and more &mdash; all in one place.</p>
+                <ul class="auth-brand-features">
+                    <li><i class="fa fa-check"></i> Real-time student &amp; staff records</li>
+                    <li><i class="fa fa-check"></i> Secure, role-based access</li>
+                    <li><i class="fa fa-check"></i> Everything synced across web &amp; app</li>
+                </ul>
+            </div>
+        </div>
 
+        <div class="auth-form-panel">
+            <div class="auth-form-panel-inner">
+                <div class="auth-mobile-brand">
+                    <?php if (customCompute($siteinfos->photo)) : ?>
+                        <img src="<?= base_url('uploads/images/' . $siteinfos->photo) ?>" alt="<?= htmlspecialchars($siteinfos->sname) ?>">
+                    <?php endif; ?>
+                    <h2><?php echo namesorting($siteinfos->sname, 50); ?></h2>
+                </div>
 
+                <?php $this->load->view($subview); ?>
+
+                <p class="auth-footer-note">&copy; <?php echo date('Y'); ?> <?php echo namesorting($siteinfos->sname, 50); ?>. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
 
     <script type="text/javascript" src="<?php echo base_url('assets/inilabs/jquery.js'); ?>"></script>
     <script type="text/javascript" src="<?php echo base_url('assets/bootstrap/bootstrap.min.js'); ?>"></script>
-
 
 </body>
 

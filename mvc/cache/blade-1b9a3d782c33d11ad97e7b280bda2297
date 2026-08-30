@@ -1,0 +1,256 @@
+a:3:{s:4:"time";i:1788073412;s:3:"ttl";i:3600;s:4:"data";s:19758:"
+<div class="pg-header" id="pgHeader">
+    <div class="pg-brand-row">
+        <div class="pg-container pg-brand-row-inner">
+            <?php
+                $hometype = (isset($homepage->pagesID) ? 'page' : (isset($homepage->postsID) ? 'post' : ''));
+                $brandHref = customCompute($homepage) ? base_url('frontend/'.$hometype.'/'.$homepage->url) : base_url('frontend');
+            ?>
+            <a class="pg-brand" href="<?php echo  $brandHref ; ?>">
+                <span class="pg-brand-mark pg-brand-mark-lg">
+                    <?php if(frontendData::get_backend('photo')): ?>
+                        <img src="<?php echo  base_url('uploads/images/'.frontendData::get_backend('photo')) ; ?>" alt="<?php echo  frontendData::get_backend('sname') ; ?>">
+                    <?php else: ?>
+                        <i class="fa fa-graduation-cap" style="color:var(--pg-primary)"></i>
+                    <?php endif; ?>
+                </span>
+                <span class="pg-brand-text">
+                    <span class="pg-brand-tagline">Khalapur Taluka Shikshan Prasarak Mandal&rsquo;s</span>
+                    <span class="pg-brand-title"><?php echo  $backend->sname ; ?></span>
+                </span>
+            </a>
+
+            <!-- Real, fixed school identity details (not settings-driven; this theme is built for this one school) -->
+            <div class="pg-brand-meta">
+                <div><span>CBSE Affiliation No.</span><strong>1131395</strong></div>
+                <div><span>School Code</span><strong>31384</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pg-nav-row" id="pgNavRow">
+        <div class="pg-container pg-nav-row-inner">
+            <?php $mobileFormet = ''; ?>
+            <?php
+                $pgCurrentUrl = isset($page) && isset($page->url) ? $page->url : (isset($post) && isset($post->url) ? $post->url : '');
+                $pgActiveClass = function ($url) use ($pgCurrentUrl) {
+                    return ($pgCurrentUrl !== '' && $url === $pgCurrentUrl) ? ' is-active' : '';
+                };
+            ?>
+            <ul class="main-menu">
+                <?php
+                    if(isset($menu['frontendTopbarMenus'])) {
+                        if(customCompute($menu['frontendTopbarMenus'])) {
+                            $firstLi = FALSE;
+                            $secondLi = FALSE;
+                            $loginActiveStatusArray = [];
+                            $countMenu = customCompute($menu['frontendTopbarMenus']);
+                            $i = 0;
+                            foreach ($menu['frontendTopbarMenus'] as $frontendTopbarMenuKye => $frontendTopbarMenu) {
+                                if($frontendTopbarMenu['menu_typeID'] == 1) {
+                                    if(!isset($frontendTopbarMenu['child'])) {
+                                        if(isset($fpages[$frontendTopbarMenu['menu_pagesID']])) {
+                                            $pgAC = $pgActiveClass($fpages[$frontendTopbarMenu['menu_pagesID']]->url);
+                                            echo '<li><a class="'.trim($pgAC).'" href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].'</a></li>';
+                                            $mobileFormet .= '<li><a class="'.trim($pgAC).'" href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].'</a></li>';
+                                        }
+                                    } else {
+                                        if(isset($fpages[$frontendTopbarMenu['menu_pagesID']])) {
+                                            if((($countMenu-1) == $i) || (($countMenu-2) == $i) || (($countMenu-3) == $i)) {
+                                                echo '<li class="dropdown-left">';
+                                            } else {
+                                                echo '<li>';
+                                            }
+                                                echo '<a href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].' <i class="fa fa-angle-down"></i></a>';
+                                                $firstLi = TRUE;
+
+                                                $mobileFormet .= '<li>';
+                                                $mobileFormet .= '<a href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].' <i class="fa fa-angle-down"></i></a>';
+                                        }
+                                    }
+                                } elseif($frontendTopbarMenu['menu_typeID'] == 2) {
+                                    if(!isset($frontendTopbarMenu['child'])) {
+                                        if(isset($fposts[$frontendTopbarMenu['menu_pagesID']])) {
+                                            echo '<li><a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].'</a></li>';
+                                            $mobileFormet .= '<li><a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].'</a></li>';
+                                        }
+                                    } else {
+                                        if(isset($fposts[$frontendTopbarMenu['menu_pagesID']])) {
+                                            if((($countMenu-1) == $i) || (($countMenu-2) == $i) || (($countMenu-3) == $i)) {
+                                                echo '<li class="dropdown-left">';
+                                            } else {
+                                                echo '<li>';
+                                            }
+                                                echo '<a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].' <i class="fa fa-angle-down"></i></a>';
+                                                $firstLi = TRUE;
+
+                                                $mobileFormet .= '<li>';
+                                                $mobileFormet .= '<a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenu['menu_pagesID']]->url).'">'.$frontendTopbarMenu['menu_label'].' <i class="fa fa-angle-down"></i></a>';
+                                        }
+                                    }
+                                } elseif($frontendTopbarMenu['menu_typeID'] == 3) {
+                                    if(!isset($frontendTopbarMenu['child'])) {
+                                        echo '<li><a href="'.$frontendTopbarMenu['menu_link'].'">'.$frontendTopbarMenu['menu_label'].'</a></li>';
+                                        $mobileFormet .= '<li><a href="'.$frontendTopbarMenu['menu_link'].'">'.$frontendTopbarMenu['menu_label'].'</a></li>';
+
+
+                                        if($frontendTopbarMenu['menu_link'] == base_url('signin/index')) {
+                                            $loginActiveStatusArray[] = TRUE;
+                                        }
+                                    } else {
+                                        if((($countMenu-1) == $i) || (($countMenu-2) == $i) || (($countMenu-3) == $i)) {
+                                            echo '<li class="dropdown-left">';
+                                        } else {
+                                            echo '<li>';
+                                        }
+                                            echo '<a href="'.$frontendTopbarMenu['menu_link'].'">'.$frontendTopbarMenu['menu_label'].' <i class="fa fa-angle-down"></i></a>';
+                                            $firstLi = TRUE;
+
+                                            $mobileFormet .= '<li>';
+                                            $mobileFormet .= '<a href="'.$frontendTopbarMenu['menu_link'].'">'.$frontendTopbarMenu['menu_label'].' <i class="fa fa-angle-down"></i></a>';
+
+                                        if($frontendTopbarMenu['menu_link'] == base_url('signin/index')) {
+                                            $loginActiveStatusArray[] = TRUE;
+                                        }
+                                    }
+                                }
+
+                                if(isset($frontendTopbarMenu['child'])) {
+                                    echo '<ul class="sub-menu">';
+                                    $mobileFormet .= '<ul class="sub-menu">';
+                                        foreach ($frontendTopbarMenu['child'] as $frontendTopbarMenuSec) {
+                                            if($frontendTopbarMenuSec['menu_typeID'] == 1) {
+                                                if(!isset($frontendTopbarMenuSec['child'])) {
+                                                    if(isset($fpages[$frontendTopbarMenuSec['menu_pagesID']])) {
+                                                        $pgACsec = trim($pgActiveClass($fpages[$frontendTopbarMenuSec['menu_pagesID']]->url));
+                                                        echo '<li><a class="'.$pgACsec.'" href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].'</a></li>';
+                                                        $mobileFormet .= '<li><a class="'.$pgACsec.'" href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].'</a></li>';
+                                                    }
+                                                } else {
+                                                    if(isset($fpages[$frontendTopbarMenuSec['menu_pagesID']])) {
+                                                        echo '<li>';
+                                                            echo '<a href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].' <i class="fa fa-angle-left"></i></a>';
+                                                        $secondLi = TRUE;
+                                                        $mobileFormet .= '<li>';
+                                                        $mobileFormet .= '<a href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].' <i class="fa fa-angle-left"></i></a>';
+                                                    }
+                                                }
+                                            } elseif($frontendTopbarMenuSec['menu_typeID'] == 2) {
+                                                if(!isset($frontendTopbarMenuSec['child'])) {
+                                                    if(isset($fposts[$frontendTopbarMenuSec['menu_pagesID']])) {
+                                                        echo '<li><a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].'</a></li>';
+                                                        $mobileFormet .= '<li><a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].'</a></li>';
+                                                    }
+                                                } else {
+                                                    if(isset($fposts[$frontendTopbarMenuSec['menu_pagesID']])) {
+                                                        echo '<li>';
+                                                            echo '<a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].' <i class="fa fa-angle-left"></i></a>';
+                                                        $secondLi = TRUE;
+                                                        $mobileFormet .= '<li>';
+                                                        $mobileFormet .= '<a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenuSec['menu_pagesID']]->url).'">'.$frontendTopbarMenuSec['menu_label'].' <i class="fa fa-angle-left"></i></a>';
+                                                    }
+                                                }
+                                            } elseif($frontendTopbarMenuSec['menu_typeID'] == 3) {
+                                                if(!isset($frontendTopbarMenuSec['child'])) {
+                                                    echo '<li><a href="'.$frontendTopbarMenuSec['menu_link'].'">'.$frontendTopbarMenuSec['menu_label'].'</a></li>';
+                                                    $mobileFormet .= '<li><a href="'.$frontendTopbarMenuSec['menu_link'].'">'.$frontendTopbarMenuSec['menu_label'].'</a></li>';
+
+                                                    if($frontendTopbarMenuSec['menu_link'] == base_url('signin/index')) {
+                                                        $loginActiveStatusArray[] = TRUE;
+                                                    }
+                                                } else {
+                                                    echo '<li>';
+                                                        echo '<a href="'.$frontendTopbarMenuSec['menu_link'].'">'.$frontendTopbarMenuSec['menu_label'].' <i class="fa fa-angle-left"></i></a>';
+                                                    $secondLi = TRUE;
+                                                    $mobileFormet .= '<li>';
+                                                    $mobileFormet .= '<a href="'.$frontendTopbarMenuSec['menu_link'].'">'.$frontendTopbarMenuSec['menu_label'].' <i class="fa fa-angle-left"></i></a>';
+
+                                                    if($frontendTopbarMenuSec['menu_link'] == base_url('signin/index')) {
+                                                        $loginActiveStatusArray[] = TRUE;
+                                                    }
+                                                }
+                                            }
+
+                                            if(isset($frontendTopbarMenuSec['child'])) {
+                                                echo '<ul class="sub-menu">';
+                                                $mobileFormet .= '<ul class="sub-menu">';
+                                                foreach ($frontendTopbarMenuSec['child'] as $frontendTopbarMenuThr) {
+                                                    if($frontendTopbarMenuThr['menu_typeID'] == 1) {
+                                                        echo '<li><a href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenuThr['menu_pagesID']]->url).'">'.$frontendTopbarMenuThr['menu_label'].'</a></li>';
+                                                        $mobileFormet .= '<li><a href="'.base_url('frontend/page/'.$fpages[$frontendTopbarMenuThr['menu_pagesID']]->url).'">'.$frontendTopbarMenuThr['menu_label'].'</a></li>';
+                                                    } elseif($frontendTopbarMenuThr['menu_typeID'] == 2) {
+                                                        echo '<li><a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenuThr['menu_pagesID']]->url).'">'.$frontendTopbarMenuThr['menu_label'].'</a></li>';
+                                                        $mobileFormet .= '<li><a href="'.base_url('frontend/post/'.$fposts[$frontendTopbarMenuThr['menu_pagesID']]->url).'">'.$frontendTopbarMenuThr['menu_label'].'</a></li>';
+                                                    } elseif($frontendTopbarMenuThr['menu_typeID'] == 3) {
+                                                        echo '<li><a href="'.$frontendTopbarMenuThr['menu_link'].'">'.$frontendTopbarMenuThr['menu_label'].'</a></li>';
+                                                        $mobileFormet .= '<li><a href="'.$frontendTopbarMenuThr['menu_link'].'">'.$frontendTopbarMenuThr['menu_label'].'</a></li>';
+
+                                                        if($frontendTopbarMenuThr['menu_link'] == base_url('signin/index')) {
+                                                            $loginActiveStatusArray[] = TRUE;
+                                                        }
+                                                    }
+                                                }
+                                                echo '</ul>';
+                                                $mobileFormet .= '</ul>';
+                                            }
+                                        }
+
+                                        if($secondLi) {
+                                            echo '</li>';
+                                            $mobileFormet .= '</li>';
+                                        }
+                                    echo '</ul>';
+                                    $mobileFormet .= '</ul>';
+                                }
+                                $i++;
+                            }
+
+
+                            if(frontendData::get_frontend('login_menu_status')) {
+                                if(!in_array(TRUE, $loginActiveStatusArray)) {
+                                    echo '<li><a href="'.base_url('signin/index').'">Login</a></li>';
+                                    $mobileFormet .= '<li><a href="'.base_url('signin/index').'">Login</a></li>';
+                                }
+                            }
+
+                            if($firstLi) {
+                                echo '</li>';
+                                $mobileFormet .= '</li>';
+                            }
+                        } else {
+                            echo '<li><a href="'.base_url('signin/index').'">Login</a></li>';
+                            $mobileFormet .= '<li><a href="'.base_url('signin/index').'">Login</a></li>';
+                        }
+                    } else {
+                        echo '<li><a href="'.base_url('signin/index').'">Login</a></li>';
+                        $mobileFormet .= '<li><a href="'.base_url('signin/index').'">Login</a></li>';
+                    }
+                ?>
+            </ul>
+
+            <div class="pg-nav-cta">
+                <a class="pg-btn pg-btn-outline pg-btn-sm" href="<?php echo  base_url('signin/index') ; ?>"><i class="fa fa-lock"></i> Portal Login</a>
+                <button type="button" class="pg-nav-toggle" id="pgNavToggle" aria-label="Open menu" aria-expanded="false" aria-controls="pgMobilePanel">
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pg-mobile-backdrop" id="pgMobileBackdrop"></div>
+<div class="pg-mobile-panel" id="pgMobilePanel">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <span class="pg-brand-mark">
+            <?php if(frontendData::get_backend('photo')): ?>
+                <img src="<?php echo  base_url('uploads/images/'.frontendData::get_backend('photo')) ; ?>" alt="<?php echo  frontendData::get_backend('sname') ; ?>">
+            <?php endif; ?>
+        </span>
+        <span class="pg-brand-name"><?php echo  namesorting($backend->sname, 24) ; ?></span>
+        <button type="button" class="pg-mobile-close" id="pgMobileClose" aria-label="Close menu"><i class="fa fa-times"></i></button>
+    </div>
+    <ul class="mobile-menu">
+       <?=$mobileFormet?>
+    </ul>
+</div>
+";}

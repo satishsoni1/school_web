@@ -671,7 +671,7 @@
                     </li>
 
 
-                    <?php            
+                    <?php
                             }
                         }
                     ?>
@@ -681,6 +681,61 @@
         </div>
     </div>
 </div>
+
+<div class="box" style="margin-bottom: 40px" >
+    <div class="box-header">
+        <h3 class="box-title"><i class="fa fa-globe"></i> Frontend Website Theme</h3>
+    </div><!-- /.box-header -->
+    <div class="box-body">
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="form-group">
+                    <label>Public website theme</label>
+                    <select class="form-control" id="frontendThemeSelect" style="max-width: 320px;">
+                        <?php
+                            $currentFrontendTheme = isset($setting->frontend_theme) ? strtolower($setting->frontend_theme) : 'default';
+                            if(customCompute($frontendThemes)) {
+                                foreach ($frontendThemes as $frontendThemeOption) {
+                        ?>
+                            <option value="<?=$frontendThemeOption?>" <?php if($currentFrontendTheme == $frontendThemeOption) { echo 'selected="selected"'; } ?>>
+                                <?=ucfirst($frontendThemeOption)?>
+                            </option>
+                        <?php
+                                }
+                            }
+                        ?>
+                    </select>
+                    <p class="help-block">Choose which design renders the public website (frontend). This does not affect the admin panel or the "<?=$this->lang->line('backend_theme_setting')?>" above.</p>
+                    <button type="button" class="btn btn-success" id="saveFrontendTheme"><i class="fa fa-check"></i> Use this theme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#saveFrontendTheme').click(function() {
+            var theme = $('#frontendThemeSelect').val();
+            $.ajax({
+                type: 'POST',
+                url: "<?=base_url('setting/frontendtheme')?>",
+                data: { theme: theme },
+                dataType: "html",
+                success: function(data) {
+                    if(data) {
+                        toastr["success"]("<?=$this->lang->line('menu_success');?>");
+                        toastr.options = {
+                            "closeButton": true,
+                            "positionClass": "toast-top-right",
+                            "timeOut": "4000"
+                        };
+                    }
+                }
+            });
+        });
+    });
+</script>
 
 <?php if(form_error('recaptcha_site_key') || form_error('recaptcha_secret_key')) { ?>
 <script type="text/javascript">

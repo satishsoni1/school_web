@@ -1,0 +1,31 @@
+a:3:{s:4:"time";i:1788076713;s:3:"ttl";i:3600;s:4:"data";s:1792:"
+<div class="pg-topbar">
+    <div class="pg-container">
+        <div class="pg-topbar-contact">
+            <?php if(frontendData::get_backend('phone')): ?>
+                <span><i class="fa fa-phone"></i><?php echo  frontendData::get_backend('phone') ; ?></span>
+            <?php endif; ?>
+            <?php if(frontendData::get_backend('email')): ?>
+                <a href="mailto:<?php echo  frontendData::get_backend('email') ; ?>"><i class="fa fa-envelope-o"></i><?php echo  frontendData::get_backend('email') ; ?></a>
+            <?php endif; ?>
+        </div>
+        <div class="pg-topbar-social">
+            <?php if(frontendData::get_frontend('facebook')): ?>
+                <a href="<?php echo  frontendData::get_frontend('facebook') ; ?>" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
+            <?php endif; ?>
+            <?php if(frontendData::get_frontend('twitter')): ?>
+                <a href="<?php echo  frontendData::get_frontend('twitter') ; ?>" aria-label="Twitter"><i class="fa fa-twitter"></i></a>
+            <?php endif; ?>
+            <?php if(frontendData::get_frontend('linkedin')): ?>
+                <a href="<?php echo  frontendData::get_frontend('linkedin') ; ?>" aria-label="LinkedIn"><i class="fa fa-linkedin"></i></a>
+            <?php endif; ?>
+            <?php if(frontendData::get_frontend('youtube')): ?>
+                <a href="<?php echo  frontendData::get_frontend('youtube') ; ?>" aria-label="YouTube"><i class="fa fa-youtube"></i></a>
+            <?php endif; ?>
+            <?php if(frontendData::get_frontend('google')): ?>
+                <a href="<?php echo  frontendData::get_frontend('google') ; ?>" aria-label="Google+"><i class="fa fa-google-plus"></i></a>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+";}

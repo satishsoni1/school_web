@@ -1,0 +1,7 @@
+{
+    "name": "Modern",
+    "slug": "modern",
+    "version": "1.0.0",
+    "description": "A ground-up redesign of the public school website: teal brand identity shared with the admin panel and app, editorial typography, and a fully self-contained asset pipeline. Added alongside the original 'default' theme without modifying it.",
+    "author": "PPGMIS"
+}

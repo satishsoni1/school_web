@@ -1,0 +1,17 @@
+a:3:{s:4:"time";i:1788069273;s:3:"ttl";i:3600;s:4:"data";s:861:"
+
+<?php $this->_section_start('content'); ?>
+    <section class="pg-section" style="min-height:60vh;display:flex;align-items:center;">
+        <div class="pg-container text-center">
+            <span class="pg-eyebrow" style="justify-content:center;"><?php echo  frontendColorStyle(namesorting($backend->sname, 40)) ; ?></span>
+            <h1>Welcome</h1>
+            <p style="max-width:520px;margin:0 auto 28px;color:var(--pg-muted);font-size:17px;">
+                This site's homepage hasn't been set up yet. Once a homepage is chosen in the admin panel, it will appear here.
+            </p>
+            <a class="pg-btn pg-btn-primary" href="<?php echo  base_url('signin/index') ; ?>"><i class="fa fa-lock"></i> Go to Portal Login</a>
+        </div>
+    </section>
+<?php $this->_section_end(); ?>
+
+<?php echo $this->_include('views/layouts/master'); ?>
+";}
