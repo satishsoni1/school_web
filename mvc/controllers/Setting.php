@@ -396,6 +396,53 @@ Class Setting extends Admin_Controller {
         echo $themeName;
     }
 
+    /**
+     * Additive: saves the website announcement popup (title / message / image /
+     * link / on-off), stored as plain rows in the existing EAV `setting` table
+     * (same mechanism as every other site setting) so it needs no migration and
+     * is already readable via frontendData::get_backend(). Own dedicated form
+     * and endpoint — does not touch the main settings form/rules() at all.
+     */
+    public function announcementSave()
+    {
+        $array = [
+            'announcement_status'  => $this->input->post('announcement_status') ? 1 : 0,
+            'announcement_title'   => trim((string) $this->input->post('announcement_title')),
+            'announcement_text'    => trim((string) $this->input->post('announcement_text')),
+            'announcement_link'    => trim((string) $this->input->post('announcement_link')),
+        ];
+
+        if ( $this->input->post('announcement_image_remove') ) {
+            $array['announcement_image'] = '';
+        }
+
+        if ( !empty($_FILES['announcement_image']['name']) ) {
+            $fileName  = $_FILES['announcement_image']['name'];
+            $explode   = explode('.', $fileName);
+            if ( customCompute($explode) >= 2 ) {
+                $newFile = hash('sha512', random19() . $fileName . config_item('encryption_key')) . '.' . end($explode);
+                $config['upload_path']   = './uploads/gallery';
+                $config['allowed_types'] = 'gif|jpg|jpeg|png|webp';
+                $config['file_name']     = $newFile;
+                $config['max_size']      = '2048';
+                $config['max_width']     = '4000';
+                $config['max_height']    = '4000';
+                $this->load->library('upload', $config);
+                if ( $this->upload->do_upload('announcement_image') ) {
+                    $array['announcement_image'] = $newFile;
+                } else {
+                    $this->session->set_flashdata('error', $this->upload->display_errors());
+                }
+            }
+        }
+
+        $this->setting_m->insertorupdate($array);
+        frontendData::get_backend_delete();
+
+        $this->session->set_flashdata('success', $this->lang->line('menu_success'));
+        redirect(base_url('setting/index') . '#announcement-panel');
+    }
+
     public function getTemplate()
     {
         $value                            = $this->input->post('value');

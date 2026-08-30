@@ -1,0 +1,53 @@
+a:3:{s:4:"time";i:1788090651;s:3:"ttl";i:3600;s:4:"data";s:3191:"
+<?php
+    $pgAnnounceStatus = frontendData::get_backend('announcement_status');
+    $pgAnnounceTitle  = frontendData::get_backend('announcement_title');
+    $pgAnnounceText   = frontendData::get_backend('announcement_text');
+    $pgAnnounceLink   = frontendData::get_backend('announcement_link');
+    $pgAnnounceImage  = frontendData::get_backend('announcement_image');
+    $pgAnnounceHasContent = ($pgAnnounceTitle || $pgAnnounceText || $pgAnnounceImage);
+    $pgAnnounceImageOnly  = ($pgAnnounceImage && !$pgAnnounceTitle && !$pgAnnounceText);
+?>
+<?php if($pgAnnounceStatus && $pgAnnounceHasContent): ?>
+    <?php $pgAnnounceHash = md5($pgAnnounceTitle.'|'.$pgAnnounceText.'|'.$pgAnnounceLink.'|'.$pgAnnounceImage); ?>
+    <div class="pg-announce-overlay" id="pgAnnounceOverlay" data-hash="<?php echo  $pgAnnounceHash ; ?>" role="dialog" aria-modal="true" aria-labelledby="pgAnnounceTitle">
+        <?php if($pgAnnounceImageOnly): ?>
+            <div class="pg-announce-modal pg-announce-modal--image-only">
+                <button type="button" class="pg-announce-close" id="pgAnnounceClose" aria-label="Close announcement"><i class="fa fa-times"></i></button>
+                <?php if($pgAnnounceLink): ?>
+                    <a href="<?php echo  $pgAnnounceLink ; ?>" class="pg-announce-media">
+                        <img src="<?php echo  base_url('uploads/gallery/'.$pgAnnounceImage) ; ?>" alt="Announcement">
+                    </a>
+                <?php else: ?>
+                    <div class="pg-announce-media">
+                        <img src="<?php echo  base_url('uploads/gallery/'.$pgAnnounceImage) ; ?>" alt="Announcement">
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php else: ?>
+            <div class="pg-announce-modal">
+                <button type="button" class="pg-announce-close" id="pgAnnounceClose" aria-label="Close announcement"><i class="fa fa-times"></i></button>
+                <?php if($pgAnnounceImage): ?>
+                    <div class="pg-announce-media">
+                        <img src="<?php echo  base_url('uploads/gallery/'.$pgAnnounceImage) ; ?>" alt="<?php echo  $pgAnnounceTitle ; ?>">
+                    </div>
+                <?php endif; ?>
+                <div class="pg-announce-body">
+                    <?php if($pgAnnounceTitle): ?>
+                        <h3 id="pgAnnounceTitle"><?php echo  $pgAnnounceTitle ; ?></h3>
+                    <?php endif; ?>
+                    <?php if($pgAnnounceText): ?>
+                        <p><?php echo  $pgAnnounceText ; ?></p>
+                    <?php endif; ?>
+                    <div class="pg-announce-ctas">
+                        <?php if($pgAnnounceLink): ?>
+                            <a class="pg-btn pg-btn-primary" href="<?php echo  $pgAnnounceLink ; ?>">Learn more <i class="fa fa-arrow-right"></i></a>
+                        <?php endif; ?>
+                        <button type="button" class="pg-btn pg-btn-outline" id="pgAnnounceDismiss"><?php echo  $pgAnnounceLink ? 'Not now' : 'Close' ; ?></button>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+";}

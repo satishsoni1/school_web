@@ -106,4 +106,40 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+
+    /* Announcement popup — shows once per (title/text/image/link) version.
+       Dismissing it is remembered per-browser via localStorage, keyed by a hash
+       of the content, so editing the announcement later shows it again even to
+       visitors who already closed the previous one. */
+    var announceOverlay = document.getElementById('pgAnnounceOverlay');
+    if (announceOverlay) {
+        var STORAGE_KEY = 'pg_announce_dismissed';
+        var hash = announceOverlay.getAttribute('data-hash');
+        var dismissed = null;
+        try { dismissed = window.localStorage.getItem(STORAGE_KEY); } catch (e) { dismissed = null; }
+
+        function closeAnnounce() {
+            announceOverlay.classList.remove('is-open');
+            document.body.style.overflow = '';
+            try { window.localStorage.setItem(STORAGE_KEY, hash); } catch (e) { /* ignore */ }
+        }
+
+        if (dismissed !== hash) {
+            window.setTimeout(function () {
+                announceOverlay.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+            }, 500);
+        }
+
+        var closeBtnEl = document.getElementById('pgAnnounceClose');
+        var dismissBtnEl = document.getElementById('pgAnnounceDismiss');
+        if (closeBtnEl) { closeBtnEl.addEventListener('click', closeAnnounce); }
+        if (dismissBtnEl) { dismissBtnEl.addEventListener('click', closeAnnounce); }
+        announceOverlay.addEventListener('click', function (e) {
+            if (e.target === announceOverlay) { closeAnnounce(); }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && announceOverlay.classList.contains('is-open')) { closeAnnounce(); }
+        });
+    }
 })();

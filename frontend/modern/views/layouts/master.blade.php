@@ -14,6 +14,8 @@
     @include('views/partials/headerAssets')
 </head>
 <body>
+    @include('views/partials/announcement')
+
     <header id="home">
         @include('views/partials/topbar')
         @include('views/partials/navbar')

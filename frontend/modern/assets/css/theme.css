@@ -918,3 +918,54 @@ h4 { font-size: 18px; }
     background: var(--pg-primary-tint); color: var(--pg-primary-deep);
     font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
 }
+
+/* -------------------------------------------------------------------------
+   18. Announcement popup
+   ------------------------------------------------------------------------- */
+.pg-announce-overlay {
+    position: fixed; inset: 0; z-index: 400;
+    background: rgba(10, 23, 21, 0.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+.pg-announce-overlay.is-open { opacity: 1; visibility: visible; }
+.pg-announce-modal {
+    position: relative;
+    width: 100%; max-width: 440px;
+    background: var(--pg-surface);
+    border-radius: var(--pg-radius-lg);
+    box-shadow: var(--pg-shadow-lg);
+    overflow: hidden;
+    transform: scale(0.92) translateY(12px);
+    transition: transform .25s ease;
+}
+.pg-announce-overlay.is-open .pg-announce-modal { transform: scale(1) translateY(0); }
+.pg-announce-close {
+    position: absolute; top: 14px; right: 14px; z-index: 2;
+    width: 34px; height: 34px; border-radius: 50%; border: 0;
+    background: rgba(15,23,42,0.55); color: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background .15s ease;
+}
+.pg-announce-close:hover { background: rgba(15,23,42,0.8); }
+.pg-announce-media img { width: 100%; height: 220px; object-fit: cover; }
+.pg-announce-body { padding: 28px; text-align: center; }
+.pg-announce-body h3 { font-size: 22px; margin-bottom: 10px; }
+.pg-announce-body p { color: var(--pg-muted); font-size: 15px; margin-bottom: 22px; }
+.pg-announce-ctas { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* Image-only announcement: just the picture, close button floats on top of it */
+.pg-announce-modal--image-only { max-width: 480px; background: transparent; box-shadow: none; }
+.pg-announce-modal--image-only .pg-announce-media {
+    display: block; border-radius: var(--pg-radius-lg); overflow: hidden; box-shadow: var(--pg-shadow-lg);
+    line-height: 0;
+}
+.pg-announce-modal--image-only .pg-announce-media img { width: 100%; height: auto; max-height: 82vh; object-fit: contain; background: var(--pg-surface); }
+.pg-announce-modal--image-only .pg-announce-close { top: 10px; right: 10px; }
+
+@media (max-width: 480px) {
+    .pg-announce-media img { height: 160px; }
+    .pg-announce-body { padding: 22px; }
+}

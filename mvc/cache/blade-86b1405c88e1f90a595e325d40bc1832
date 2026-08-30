@@ -1,4 +1,4 @@
-a:3:{s:4:"time";i:1788073888;s:3:"ttl";i:3600;s:4:"data";s:13484:"
+a:3:{s:4:"time";i:1788090658;s:3:"ttl";i:3600;s:4:"data";s:13467:"
 
 <?php $this->_section_start('content'); ?>
 
@@ -212,7 +212,7 @@ a:3:{s:4:"time";i:1788073888;s:3:"ttl";i:3600;s:4:"data";s:13484:"
                         <?php if($i <= 4): ?>
                             <div class="pg-card pg-staff-card">
                                 <div class="pg-staff-photo"><img src="<?php echo  imagelink($teacher->photo) ; ?>" alt=""></div>
-                                <h4><?php echo  namesorting($teacher->name, 18) ; ?></h4>
+                                <h4><?php echo  $teacher->name ; ?></h4>
                                 <div class="pg-staff-role"><?php echo  $teacher->designation ; ?></div>
                                 <div class="pg-staff-social">
                                     <?php if(isset($sociallink[$teacher->usertypeID][$teacher->teacherID])): ?>

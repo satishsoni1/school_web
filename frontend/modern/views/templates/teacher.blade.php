@@ -34,37 +34,61 @@
         </div>
     </div>
 
-    <section class="pg-section">
-        <div class="pg-container">
-            <div class="pg-grid pg-grid--4">
-                @if(customCompute($teachers))
-                    @foreach($teachers as $teacher)
+    @if(customCompute($websiteStaffTeaching))
+        <section class="pg-section">
+            <div class="pg-container">
+                <div class="pg-section-head text-center">
+                    <span class="pg-eyebrow">Meet the Team</span>
+                    <h2>Staff</h2>
+                </div>
+                <div class="pg-grid pg-grid--4">
+                    @foreach($websiteStaffTeaching as $staffMember)
                         <div class="pg-card pg-staff-card">
-                            <div class="pg-staff-photo"><img src="{{ imagelink($teacher->photo) }}" alt=""></div>
-                            <h4>{{ namesorting($teacher->name, 18) }}</h4>
-                            <div class="pg-staff-role">{{ $teacher->designation }}</div>
+                            <div class="pg-staff-photo"><img src="{{ imagelink($staffMember->photo, 'uploads/gallery') }}" alt=""></div>
+                            <h4>{{ $staffMember->name }}</h4>
+                            <div class="pg-staff-role">{{ $staffMember->designation }}</div>
                             <div class="pg-staff-meta">
-                                @if(frontendData::get_frontend('teacher_email_status'))
-                                    @if($teacher->email)<div>{{ $teacher->email }}</div>@endif
-                                @endif
-                                @if(frontendData::get_frontend('teacher_phone_status'))
-                                    @if($teacher->phone)<div>{{ $teacher->phone }}</div>@endif
-                                @endif
-                            </div>
-                            <div class="pg-staff-social">
-                                @if(isset($sociallink[$teacher->usertypeID][$teacher->teacherID]))
-                                    <a href="{{ $sociallink[$teacher->usertypeID][$teacher->teacherID]->facebook }}"><i class="fa fa-facebook"></i></a>
-                                    <a href="{{ $sociallink[$teacher->usertypeID][$teacher->teacherID]->twitter }}"><i class="fa fa-twitter"></i></a>
-                                    <a href="{{ $sociallink[$teacher->usertypeID][$teacher->teacherID]->linkedin }}"><i class="fa fa-linkedin"></i></a>
-                                    <a href="{{ $sociallink[$teacher->usertypeID][$teacher->teacherID]->googleplus }}"><i class="fa fa-google-plus"></i></a>
-                                @endif
+                                @if($staffMember->email)<div>{{ $staffMember->email }}</div>@endif
+                                @if($staffMember->phone)<div>{{ $staffMember->phone }}</div>@endif
                             </div>
                         </div>
                     @endforeach
-                @endif
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
+
+    @if(customCompute($websiteStaffNonTeaching))
+        <section class="pg-section pg-section--alt">
+            <div class="pg-container">
+                <div class="pg-section-head text-center">
+                    <span class="pg-eyebrow">Behind the Scenes</span>
+                    <h2>Non-Teaching Staff</h2>
+                </div>
+                <div class="pg-grid pg-grid--4">
+                    @foreach($websiteStaffNonTeaching as $staffMember)
+                        <div class="pg-card pg-staff-card">
+                            <div class="pg-staff-photo"><img src="{{ imagelink($staffMember->photo, 'uploads/gallery') }}" alt=""></div>
+                            <h4>{{ $staffMember->name }}</h4>
+                            <div class="pg-staff-role">{{ $staffMember->designation }}</div>
+                            <div class="pg-staff-meta">
+                                @if($staffMember->email)<div>{{ $staffMember->email }}</div>@endif
+                                @if($staffMember->phone)<div>{{ $staffMember->phone }}</div>@endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
+    @if(!customCompute($websiteStaffTeaching) && !customCompute($websiteStaffNonTeaching))
+        <section class="pg-section">
+            <div class="pg-container">
+                <p class="text-muted" style="text-align:center;">Staff details will be published soon.</p>
+            </div>
+        </section>
+    @endif
 
     @if(strlen($page->content) > 0)
         <section class="pg-section--tight pg-section--alt">

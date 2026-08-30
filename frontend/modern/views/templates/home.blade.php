@@ -212,7 +212,7 @@
                         @if($i <= 4)
                             <div class="pg-card pg-staff-card">
                                 <div class="pg-staff-photo"><img src="{{ imagelink($teacher->photo) }}" alt=""></div>
-                                <h4>{{ namesorting($teacher->name, 18) }}</h4>
+                                <h4>{{ $teacher->name }}</h4>
                                 <div class="pg-staff-role">{{ $teacher->designation }}</div>
                                 <div class="pg-staff-social">
                                     @if(isset($sociallink[$teacher->usertypeID][$teacher->teacherID]))

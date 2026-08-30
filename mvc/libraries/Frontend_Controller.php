@@ -49,6 +49,7 @@ class Frontend_Controller extends MY_Controller {
         $this->load->model('teacher_m');
         $this->load->model('notice_m');
         $this->load->model('sociallink_m');
+        $this->load->model('website_staff_m');
         
         
         $this->data['backend_setting'] = $this->setting_m->get_setting();
@@ -65,6 +66,21 @@ class Frontend_Controller extends MY_Controller {
         $this->data['events'] = $this->event_m->get_order_by_event(array('schoolyearID' => $schoolyearID));
         $this->data['teachers'] = $this->teacher_m->get_teacher();
         $this->data['notices'] = $this->notice_m->get_order_by_notice(array('schoolyearID' => $schoolyearID));
+        // Public "Staff" page directory — independent of the real teacher table,
+        // so it can carry a photo, custom order, and non-teaching staff. Grouped
+        // here so templates can render the two separately-headed sections.
+        $websiteStaffAll = $this->website_staff_m->get_order_by_website_staff(array('status' => 1));
+        $this->data['websiteStaffTeaching'] = [];
+        $this->data['websiteStaffNonTeaching'] = [];
+        if (customCompute($websiteStaffAll)) {
+            foreach ($websiteStaffAll as $staffMember) {
+                if ($staffMember->group_type === 'non_teaching') {
+                    $this->data['websiteStaffNonTeaching'][] = $staffMember;
+                } else {
+                    $this->data['websiteStaffTeaching'][] = $staffMember;
+                }
+            }
+        }
         $this->data['sociallink'] = pluck_multi_array_key($this->sociallink_m->get_sociallink(), 'obj', 'usertypeID', 'userID');
         $this->data['classes'] = $this->classes_m->general_get_classes();
         $this->data['countrys'] = $this->getCountrys();
@@ -118,6 +134,8 @@ class Frontend_Controller extends MY_Controller {
 
         $this->bladeView->set('events', $this->data['events']);
         $this->bladeView->set('teachers', $this->data['teachers']);
+        $this->bladeView->set('websiteStaffTeaching', $this->data['websiteStaffTeaching']);
+        $this->bladeView->set('websiteStaffNonTeaching', $this->data['websiteStaffNonTeaching']);
         $this->bladeView->set('notices', $this->data['notices']);
         $this->bladeView->set('sociallink', $this->data['sociallink']);
         $this->bladeView->set('classes', $this->data['classes']);

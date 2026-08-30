@@ -713,6 +713,63 @@
     </div>
 </div>
 
+<div class="box" style="margin-bottom: 40px" id="announcement-panel">
+    <div class="box-header">
+        <h3 class="box-title"><i class="fa fa-bullhorn"></i> Website Announcement Popup</h3>
+    </div><!-- /.box-header -->
+    <div class="box-body">
+        <?php
+            $announceStatus = isset($setting->announcement_status) ? (int) $setting->announcement_status : 0;
+            $announceTitle  = isset($setting->announcement_title) ? $setting->announcement_title : '';
+            $announceText   = isset($setting->announcement_text) ? $setting->announcement_text : '';
+            $announceLink   = isset($setting->announcement_link) ? $setting->announcement_link : '';
+            $announceImage  = isset($setting->announcement_image) ? $setting->announcement_image : '';
+        ?>
+        <form method="post" enctype="multipart/form-data" action="<?=base_url('setting/announcementSave')?>">
+            <div class="row">
+                <div class="col-sm-8">
+                    <p class="help-block">Shows once per visit as a popup when someone loads the public website. Leave the title and message blank (and the toggle off) to keep it hidden.</p>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="announcement_status" value="1" <?=$announceStatus ? 'checked="checked"' : ''?>>
+                            &nbsp;Show this announcement on the website
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" class="form-control" name="announcement_title" maxlength="128" value="<?=htmlspecialchars($announceTitle)?>" placeholder="e.g. Admissions Open for 2026-27">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea class="form-control" name="announcement_text" rows="3" maxlength="500" placeholder="Photo, text, or both — leave this blank for an image-only announcement."><?=htmlspecialchars($announceText)?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Link (optional)</label>
+                        <input type="text" class="form-control" name="announcement_link" maxlength="250" value="<?=htmlspecialchars($announceLink)?>" placeholder="https://... (shows a 'Learn more' button if set)">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Photo (optional)</label><br>
+                        <?php if ($announceImage) { ?>
+                            <img src="<?=base_url('uploads/gallery/'.$announceImage)?>" alt="" style="max-width:200px;max-height:120px;display:block;margin-bottom:10px;border:1px solid #e2e7eb;border-radius:4px;">
+                            <label style="font-weight:normal;">
+                                <input type="checkbox" name="announcement_image_remove" value="1"> Remove current photo
+                            </label><br>
+                        <?php } ?>
+                        <input type="file" name="announcement_image" accept="image/*">
+                    </div>
+
+                    <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save Announcement</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script type="text/javascript">
     $(document).ready(function() {
         $('#saveFrontendTheme').click(function() {

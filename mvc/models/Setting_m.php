@@ -45,7 +45,13 @@
         public function insertorupdate( $arrays )
         {
             foreach ( $arrays as $key => $array ) {
-                $this->db->query("INSERT INTO setting (fieldoption, value) VALUES ('" . $key . "', '" . $array . "') ON DUPLICATE KEY UPDATE fieldoption='" . $key . "' , value='" . $array . "'");
+                // Escaped/bound rather than string-concatenated: unescaped values
+                // (e.g. any text containing an apostrophe, such as "Parent's Day")
+                // previously broke the query with a SQL syntax error.
+                $this->db->query(
+                    "INSERT INTO setting (fieldoption, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE fieldoption = VALUES(fieldoption), value = VALUES(value)",
+                    [ $key, $array ]
+                );
             }
             return true;
         }
