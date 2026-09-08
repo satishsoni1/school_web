@@ -145,9 +145,9 @@ class Assignment extends Api_Controller
                 $config['upload_path'] = "./uploads/images";
                 $config['allowed_types'] = "gif|jpg|png|jpeg|pdf|doc|xml|docx|GIF|JPG|PNG|JPEG|PDF|DOC|XML|DOCX|xls|xlsx|txt|ppt|csv|XLS|XLSX|TXT|PPT|CSV";
                 $config['file_name'] = $new_file;
-                $config['max_size'] = '100024';
-                $config['max_width'] = '3000';
-                $config['max_height'] = '3000';
+                $config['max_size'] = '1000000';
+                $config['max_width'] = '300000';
+                $config['max_height'] = '300000';
                 $this->load->library('upload', $config);
                 if (!$this->upload->do_upload("file")) {
                     $this->form_validation->set_message("fileuploadans", $this->upload->display_errors());
