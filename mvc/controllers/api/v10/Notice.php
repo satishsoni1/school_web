@@ -12,6 +12,7 @@ class Notice extends Api_Controller
         $this->load->model('notice_m');
         $this->load->model("alert_m");
         $this->load->model('studentrelation_m');
+        $this->load->model('classes_m');
     }
 
     public function index_get()
@@ -23,33 +24,14 @@ class Notice extends Api_Controller
         // "All Classes" notices (classesID null/0) reach everyone, same as before.
         $usertypeID = $this->session->userdata('usertypeID');
         if (($usertypeID == 3 || $usertypeID == 4) && customCompute($notices)) {
-            $myClassesID = 0;
-            if ($usertypeID == 3) {
-                $student = $this->studentrelation_m->get_single_student(array(
-                    'srstudentID' => $this->session->userdata('loginuserID'),
-                    'srschoolyearID' => $schoolyearID,
-                ));
-                $myClassesID = customCompute($student) ? $student->srclassesID : 0;
-            } else {
-                // Parent: match if ANY of their children is in the notice's class.
-                // get_order_by_student() already scopes results to this parent's own
-                // children automatically (via Studentrelation_m::userRelation()) when
-                // called in a parent session — no explicit parentID filter needed (there
-                // isn't one to filter on: parentID lives on `student`, not `studentrelation`).
-                $children = $this->studentrelation_m->get_order_by_student(array(
-                    'srschoolyearID' => $schoolyearID,
-                ));
-                $myClassesIDs = customCompute($children) ? pluck($children, 'srclassesID') : [];
-            }
-
-            $notices = array_values(array_filter($notices, function($notice) use ($usertypeID, $myClassesID, $myClassesIDs) {
-                if (empty($notice->classesID)) {
-                    return true; // All Classes
-                }
-                return $usertypeID == 3
-                    ? $notice->classesID == $myClassesID
-                    : in_array($notice->classesID, $myClassesIDs ?? []);
+            $children     = $this->myStudents($schoolyearID);
+            $myClassesIDs = pluck($children, 'srclassesID');
+            $notices = array_values(array_filter($notices, function($notice) use ($myClassesIDs) {
+                return empty($notice->classesID) || in_array($notice->classesID, $myClassesIDs);
             }));
+            foreach ($notices as $notice) {
+                $this->attachAudience($notice, $children);
+            }
         }
 
         $this->retdata['notices'] = $notices;
@@ -67,6 +49,10 @@ class Notice extends Api_Controller
         if ((int)$id) {
             $this->retdata['notice'] = $this->notice_m->get_single_notice(array('noticeID' => $id, 'schoolyearID' => $schoolyearID));
             if (customCompute($this->retdata['notice'])) {
+                $usertypeID = $this->session->userdata('usertypeID');
+                if ($usertypeID == 3 || $usertypeID == 4) {
+                    $this->attachAudience($this->retdata['notice'], $this->myStudents($schoolyearID));
+                }
                 $alert = $this->alert_m->get_single_alert(array('itemID' => $id, "userID" => $this->session->userdata("loginuserID"), 'usertypeID' => $this->session->userdata('usertypeID'), 'itemname' => 'notice'));
                 if (!customCompute($alert)) {
                     $array = array(
@@ -98,6 +84,43 @@ class Notice extends Api_Controller
             ], REST_Controller::HTTP_NOT_FOUND);
         }
     }
+    /**
+     * The logged-in student's own record, or a parent's children, for this school year.
+     * get_order_by_student() already scopes to the current student's class / parent's children.
+     */
+    private function myStudents($schoolyearID)
+    {
+        if ($this->session->userdata('usertypeID') == 3) {
+            $student = $this->studentrelation_m->get_single_student(array(
+                'srstudentID'    => $this->session->userdata('loginuserID'),
+                'srschoolyearID' => $schoolyearID,
+            ));
+            return customCompute($student) ? [$student] : [];
+        }
+        $children = $this->studentrelation_m->get_order_by_student(array('srschoolyearID' => $schoolyearID));
+        return customCompute($children) ? $children : [];
+    }
+
+    /**
+     * Tells the app who a notice is for: the class name and, for a parent, which of
+     * their children it applies to ("All Classes" notices apply to every child).
+     */
+    private function attachAudience($notice, $students)
+    {
+        $notice->classname = '';
+        if (!empty($notice->classesID)) {
+            $class = $this->classes_m->general_get_single_classes(array('classesID' => $notice->classesID));
+            $notice->classname = customCompute($class) ? $class->classes : '';
+        }
+        $names = [];
+        foreach ($students as $student) {
+            if (empty($notice->classesID) || $student->srclassesID == $notice->classesID) {
+                $names[] = $student->srname;
+            }
+        }
+        $notice->studentnames = $names;
+    }
+
     protected function rules() {
 		$rules = array(
 				 array(

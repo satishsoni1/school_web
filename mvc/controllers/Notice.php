@@ -276,6 +276,7 @@ class Notice extends Admin_Controller {
 				$this->data['notice'] = $this->notice_m->get_single_notice(array('noticeID' => $id, 'schoolyearID' => $schoolyearID));
 				if($this->data['notice']) {
 					$this->notice_m->delete_notice($id);
+					$this->notification_lib->removeForReference('notice', $id);
 					$this->session->set_flashdata('success', $this->lang->line('menu_success'));
 					redirect(base_url("notice/index"));
 				} else {

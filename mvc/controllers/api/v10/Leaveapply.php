@@ -20,7 +20,25 @@ class Leaveapply extends Api_Controller
     public function index_get()
     {
         $schoolyearID = $this->session->userdata('defaultschoolyearID');
-        $this->retdata['leaveapplications'] = $this->leaveapplication_m->get_order_by_leaveapply_with_user(array('leaveapplications.schoolyearID' => $schoolyearID, 'leaveapplications.create_usertypeID' => $this->session->userdata('usertypeID'), 'leaveapplications.create_userID' => $this->session->userdata('loginuserID')));
+        $usertypeID   = $this->session->userdata('usertypeID');
+        $loginuserID  = $this->session->userdata('loginuserID');
+
+        if ($usertypeID == 4) {
+            // Parent: leaves are stored against the child (usertype 3), so list all children's leaves.
+            $children = $this->parentChildren($schoolyearID);
+            $leaveapplications = $this->leaveapplication_m->get_order_by_leaveapply_for_students(array_keys($children), $schoolyearID);
+        } else {
+            $children = ($usertypeID == 3) ? [$loginuserID => $this->session->userdata('name')] : [];
+            $leaveapplications = $this->leaveapplication_m->get_order_by_leaveapply_with_user(array('leaveapplications.schoolyearID' => $schoolyearID, 'leaveapplications.create_usertypeID' => $usertypeID, 'leaveapplications.create_userID' => $loginuserID));
+        }
+
+        if (customCompute($leaveapplications)) {
+            foreach ($leaveapplications as $leaveapplication) {
+                $leaveapplication->studentname = isset($children[$leaveapplication->create_userID]) ? $children[$leaveapplication->create_userID] : '';
+            }
+        }
+
+        $this->retdata['leaveapplications'] = $leaveapplications;
         $this->retdata['leavecategorys'] = pluck($this->leavecategory_m->get_leavecategory(), 'leavecategory', 'leavecategoryID');
 
         $this->response([
@@ -28,6 +46,29 @@ class Leaveapply extends Api_Controller
             'message'   => 'Success',
             'data'      => $this->retdata
         ], REST_Controller::HTTP_OK);
+    }
+
+    /**
+     * A parent's children for the given school year, as [studentID => name].
+     * studentrelation_m already restricts the rows to the logged-in parent's children.
+     */
+    private function parentChildren($schoolyearID)
+    {
+        return pluck($this->studentrelation_m->get_order_by_student(array('srschoolyearID' => $schoolyearID)), 'name', 'studentID');
+    }
+
+    /** Whether the logged-in user may see this leave: its creator, or the parent of the student it belongs to. */
+    private function canViewLeave($leaveapply, $schoolyearID)
+    {
+        $usertypeID  = $this->session->userdata('usertypeID');
+        $loginuserID = $this->session->userdata('loginuserID');
+        if ($leaveapply->create_userID == $loginuserID && $leaveapply->create_usertypeID == $usertypeID) {
+            return true;
+        }
+        if ($usertypeID == 4 && $leaveapply->create_usertypeID == 3) {
+            return isset($this->parentChildren($schoolyearID)[$leaveapply->create_userID]);
+        }
+        return false;
     }
 
     public function view_get($id = null)
@@ -38,7 +79,7 @@ class Leaveapply extends Api_Controller
             $this->retdata['leaveapply'] = $this->leaveapplication_m->get_single_leaveapplication(array('leaveapplicationID' => $id, 'schoolyearID' => $schoolyearID));
 
             if(customCompute($this->retdata['leaveapply'])) {
-                if(($this->retdata['leaveapply']->create_userID == $this->session->userdata('loginuserID')) && ($this->retdata['leaveapply']->create_usertypeID == $this->session->userdata('usertypeID'))) {
+                if($this->canViewLeave($this->retdata['leaveapply'], $schoolyearID)) {
 
                     $leavecategory = $this->leavecategory_m->get_single_leavecategory(array('leavecategoryID' => $this->retdata['leaveapply']->leavecategoryID));
                     if(customCompute($leavecategory)) {
@@ -47,7 +88,7 @@ class Leaveapply extends Api_Controller
                         $this->retdata['leaveapply']->category = '';
                     }
 
-                    $availableleave = $this->leaveapplication_m->get_sum_of_leave_days_by_user_for_single_category($this->session->userdata('usertypeID'), $this->session->userdata('loginuserID'), $schoolyearID, $this->retdata['leaveapply']->leavecategoryID);
+                    $availableleave = $this->leaveapplication_m->get_sum_of_leave_days_by_user_for_single_category($this->retdata['leaveapply']->create_usertypeID, $this->retdata['leaveapply']->create_userID, $schoolyearID, $this->retdata['leaveapply']->leavecategoryID);
                     if(isset($availableleave->days) && $availableleave->days > 0) {
                         $availableleavedays = $availableleave->days;
                     } else {
@@ -104,7 +145,11 @@ class Leaveapply extends Api_Controller
         $usertypeID   = $this->session->userdata('usertypeID');
 
         // Leave in the student/parent portal is always for a student -> usertype 3.
-        $categories = $this->leavecategory_m->get_join_leavecategory_and_leaveassign(3, $schoolyearID);
+        // Every category is offered; a day quota (and "remaining") only applies where the
+        // admin has assigned one to students in Leave Assign for this school year.
+        $assignedDays = pluck($this->leavecategory_m->get_join_leavecategory_and_leaveassign(3, $schoolyearID), 'leaveassignday', 'leavecategoryID');
+        $this->db->order_by("leavecategoryID", "asc");
+        $categories   = $this->leavecategory_m->get_order_by_leavecategory();
 
         // For a student login we can compute the exact remaining balance now.
         $usedByCategory = [];
@@ -119,29 +164,48 @@ class Leaveapply extends Api_Controller
         $retCategories = [];
         if (customCompute($categories)) {
             foreach ($categories as $category) {
-                $assigned = isset($category->leaveassignday) ? (float)$category->leaveassignday : 0;
+                $assigned = isset($assignedDays[$category->leavecategoryID]) ? (float)$assignedDays[$category->leavecategoryID] : null;
                 $used     = isset($usedByCategory[$category->leavecategoryID]) ? (float)$usedByCategory[$category->leavecategoryID] : 0;
+                $remaining = null;
+                if ($assigned !== null) {
+                    $remaining = ($usertypeID == 3) ? max(0, $assigned - $used) : $assigned;
+                }
                 $retCategories[] = [
                     'leavecategoryID' => $category->leavecategoryID,
                     'leavecategory'   => $category->leavecategory,
                     'leaveassignday'  => $assigned,
-                    'remaining'       => ($usertypeID == 3) ? max(0, $assigned - $used) : $assigned,
+                    'remaining'       => $remaining,
                 ];
             }
         }
         $this->retdata['leavecategories'] = $retCategories;
 
-        // Parent: list children so the form can pick which student the leave is for.
+        // Parent: list children so the form can pick which student the leave is for,
+        // each with its own remaining balance per category.
         $children = [];
         if ($usertypeID == 4) {
             $students = $this->studentrelation_m->get_order_by_student(array('srschoolyearID' => $schoolyearID));
             if (customCompute($students)) {
                 foreach ($students as $student) {
+                    $childUsed = pluck(
+                        $this->leaveapplication_m->get_sum_of_leave_days_by_user(3, $student->studentID, $schoolyearID),
+                        'days',
+                        'leavecategoryID'
+                    );
+                    $remaining = [];
+                    foreach ($retCategories as $category) {
+                        if ($category['leaveassignday'] === null) {
+                            continue; // no quota for this category
+                        }
+                        $used = isset($childUsed[$category['leavecategoryID']]) ? (float)$childUsed[$category['leavecategoryID']] : 0;
+                        $remaining[$category['leavecategoryID']] = max(0, $category['leaveassignday'] - $used);
+                    }
                     $children[] = [
                         'studentID'   => $student->studentID,
                         'name'        => $student->name,
                         'srclassesID' => $student->srclassesID,
                         'srsectionID' => $student->srsectionID,
+                        'remaining'   => $remaining,
                     ];
                 }
             }

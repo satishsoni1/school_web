@@ -96,7 +96,7 @@ body > .header .logo {
 }
 .sidebar .sidebar-menu .treeview-menu > li > a:hover,
 .sidebar .sidebar-menu .treeview-menu > li.active > a {
-  color: #fff;
+  color: var(--ppg-teal-900);
 }
 .sidebar .user-panel .info, .sidebar .user-panel .info a {
   color: #fff;

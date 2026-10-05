@@ -13,6 +13,7 @@ class PublicHolisticReport extends Frontend_Controller
         $this->load->model('teacherclasses_m');
         $this->load->model('sattendance_m');
         $this->load->model('setting_m');
+        $this->load->model('holisticsnapshot_m');
         $this->defaultschoolyearID = (int) $this->uri->segment(5);
         $this->studentID = (int) $this->uri->segment(3);
         $this->classesID = (int) $this->uri->segment(4);
@@ -30,17 +31,17 @@ class PublicHolisticReport extends Frontend_Controller
         $classesID    = (int) $this->classesID;
         $schoolyearID = (int) $this->defaultschoolyearID;
 
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Read-only: everything about the student/class/teacher comes from the report snapshot
+        // saved in the admin portal, never from today's master data. No snapshot = not generated.
+        $context = $this->holisticsnapshot_m->report_context($this->holisticsnapshot_m->get_single_snapshot(array(
+            'studentID'    => $studentID,
+            'schoolyearID' => $schoolyearID,
+        )));
+        if ($context === null) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $this->data['student']->srclassesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
+        $this->data = array_merge($this->data, $context);
+        $classesID  = $context['classesID'];
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -93,9 +94,6 @@ class PublicHolisticReport extends Frontend_Controller
 
         // ── Attendance ────────────────────────────────────────────────────────
         
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
        
         if($classesID == 1){
                 $student = $this->sattendance_m->get_student_attendance_master($studentID);
@@ -185,17 +183,17 @@ class PublicHolisticReport extends Frontend_Controller
     {
         $studentID    = (int) $this->studentID;
         $schoolyearID = (int) $this->defaultschoolyearID;
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Read-only: everything about the student/class/teacher comes from the report snapshot
+        // saved in the admin portal, never from today's master data. No snapshot = not generated.
+        $context = $this->holisticsnapshot_m->report_context($this->holisticsnapshot_m->get_single_snapshot(array(
+            'studentID'    => $studentID,
+            'schoolyearID' => $schoolyearID,
+        )));
+        if ($context === null) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $this->data['student']->srclassesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
+        $this->data = array_merge($this->data, $context);
+        $classesID  = $context['classesID'];
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -291,9 +289,6 @@ class PublicHolisticReport extends Frontend_Controller
         }
 
         $this->data['attendance_report'] = $attendance_results;
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_4', $this->data);
     }
@@ -303,17 +298,17 @@ class PublicHolisticReport extends Frontend_Controller
         $studentID    = (int) $this->studentID;
         $schoolyearID = (int) $this->defaultschoolyearID;
 
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Read-only: everything about the student/class/teacher comes from the report snapshot
+        // saved in the admin portal, never from today's master data. No snapshot = not generated.
+        $context = $this->holisticsnapshot_m->report_context($this->holisticsnapshot_m->get_single_snapshot(array(
+            'studentID'    => $studentID,
+            'schoolyearID' => $schoolyearID,
+        )));
+        if ($context === null) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $this->data['student']->srclassesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
+        $this->data = array_merge($this->data, $context);
+        $classesID  = $context['classesID'];
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -409,9 +404,6 @@ class PublicHolisticReport extends Frontend_Controller
         }
 
         $this->data['attendance_report'] = $attendance_results;
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_5', $this->data);
     }
@@ -420,17 +412,17 @@ class PublicHolisticReport extends Frontend_Controller
         $studentID    = (int) $this->studentID;
         $schoolyearID = (int) $this->defaultschoolyearID;
 
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Read-only: everything about the student/class/teacher comes from the report snapshot
+        // saved in the admin portal, never from today's master data. No snapshot = not generated.
+        $context = $this->holisticsnapshot_m->report_context($this->holisticsnapshot_m->get_single_snapshot(array(
+            'studentID'    => $studentID,
+            'schoolyearID' => $schoolyearID,
+        )));
+        if ($context === null) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $this->data['student']->srclassesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
+        $this->data = array_merge($this->data, $context);
+        $classesID  = $context['classesID'];
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -526,9 +518,6 @@ class PublicHolisticReport extends Frontend_Controller
         }
 
         $this->data['attendance_report'] = $attendance_results;
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_6', $this->data);
     }

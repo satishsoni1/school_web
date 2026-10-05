@@ -149,6 +149,39 @@ class Leaveapplication_m extends MY_Model {
         return $query->result();
     }
 
+    /* Student leave applications for a set of students (parent portal), with approver names. */
+    public function get_order_by_leaveapply_for_students($studentIDs, $schoolyearID) {
+        if(!customCompute($studentIDs)) {
+            return [];
+        }
+        $this->db->where_in('leaveapplications.create_userID', $studentIDs);
+        return $this->get_order_by_leaveapply_with_user(array('leaveapplications.schoolyearID' => $schoolyearID, 'leaveapplications.create_usertypeID' => 3));
+    }
+
+    /* Student leaves (pending or approved, not declined) covering a given Y-m-d date, keyed by studentID. */
+    public function get_student_leaves_on_date($date, $schoolyearID) {
+        $this->db->select('leaveapplicationID, create_userID, leavecategoryID, from_date, to_date, status');
+        $this->db->where('create_usertypeID', 3);
+        $this->db->where('schoolyearID', $schoolyearID);
+        $this->db->where('from_date <=', $date);
+        $this->db->where('to_date >=', $date);
+        $this->db->group_start();
+        $this->db->where('status', 1);
+        $this->db->or_where('status IS NULL', NULL, FALSE);
+        $this->db->group_end();
+        $this->db->order_by('status', 'DESC');
+        $query = $this->db->get('leaveapplications');
+
+        $retArray = [];
+        foreach ($query->result() as $leave) {
+            // Prefer an approved leave over a pending one for the same student.
+            if (!isset($retArray[$leave->create_userID])) {
+                $retArray[$leave->create_userID] = $leave;
+            }
+        }
+        return $retArray;
+    }
+
     /* define for 4.4 */
     public function get_order_by_leaveapplication_with_user($array) {
         $this->db->select('leaveapplications.*, systemadmin.name as aname, teacher.name as tname, student.name as sname, parents.name as pname, user.name as uname');

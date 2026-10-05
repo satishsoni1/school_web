@@ -237,6 +237,14 @@
                                 <input type="text" class="form-control" id="registerNO" name="registerNO" value="<?=set_value('registerNO')?>">
                                 <span class="text-danger"><?=form_error('registerNO')?></span>
                             </div>
+                            <?php if ($this->db->field_exists('rte', 'student')) { ?>
+                            <div class="form-group">
+                                <label style="font-weight: 600;">
+                                    <input type="checkbox" name="rte" value="1" <?=(set_value('rte') == 1) ? 'checked' : ''?>>
+                                    RTE student (Right to Education quota)
+                                </label>
+                            </div>
+                            <?php } ?>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group <?=form_error('roll') ? 'has-error' : ''?>">

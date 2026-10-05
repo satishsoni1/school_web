@@ -115,7 +115,15 @@
                                             <?=profileproimage($student->photo)?>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: middle; font-weight: 600; color: #1e293b;" data-title="<?=$this->lang->line('attendance_name')?>"><?=$student->srname?></td>
+                                    <td style="vertical-align: middle; font-weight: 600; color: #1e293b;" data-title="<?=$this->lang->line('attendance_name')?>"><?=$student->srname?>
+                                        <?php if(isset($studentleaves[$student->studentID])) { $studentleave = $studentleaves[$student->studentID]; $leavecategoryName = isset($leavecategorys[$studentleave->leavecategoryID]) ? $leavecategorys[$studentleave->leavecategoryID] : 'Leave'; ?>
+                                            <div style="margin-top: 4px;">
+                                                <a href="<?=base_url('leaveapplication/view/'.$studentleave->leaveapplicationID)?>" target="_blank" class="label <?=($studentleave->status == 1) ? 'label-info' : 'label-warning'?>" style="font-size: 11px; font-weight: 600;" title="<?=date('d M Y', strtotime($studentleave->from_date))?> - <?=date('d M Y', strtotime($studentleave->to_date))?>">
+                                                    <i class="fa fa-plane"></i> <?=($studentleave->status == 1) ? 'On Leave' : 'Leave Pending'?>: <?=htmlspecialchars($leavecategoryName)?>
+                                                </a>
+                                            </div>
+                                        <?php } ?>
+                                    </td>
                                     <td style="vertical-align: middle; color: #64748b;" data-title="<?=$this->lang->line('attendance_email')?>"><?=$student->email?></td>
                                     <td style="text-align: center; vertical-align: middle; font-weight: 600;" data-title="<?=$this->lang->line('attendance_roll')?>"><span class="badge" style="background: #64748b; padding: 5px 10px; border-radius: 4px;"><?=$student->srroll?></span></td>
                                     <td style="text-align: center; vertical-align: middle;" class="studentID" data-studentid="<?=$student->studentID?>" data-title="<?=$this->lang->line('attendance_attendance')?>">

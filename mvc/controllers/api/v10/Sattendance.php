@@ -609,7 +609,19 @@ class Sattendance extends Api_Controller
 					$roster = $this->data['siteinfos']->attendance == "subject"
 						? $this->subjectattendance_m->get_order_by_sub_attendance(array_merge($rosterData, array('subjectID' => $subjectID)))
 						: $this->sattendance_m->get_order_by_attendance($rosterData);
-					$studentIDs = pluck($roster, 'studentID');
+					// Absent students get a dedicated "Absent" alert (student + parent); the rest
+					// get the generic "attendance marked" notification.
+					$aday = 'a'.abs($day);
+					$absentIDs = [];
+					foreach ((array) $roster as $row) {
+						if (isset($row->$aday) && $row->$aday == 'A') {
+							$absentIDs[] = $row->studentID;
+						}
+					}
+					list($month, $year) = explode('-', $monthyear);
+					$this->notification_lib->notifyAbsentees($absentIDs, sprintf('%04d-%02d-%02d', $year, $month, abs($day)));
+
+					$studentIDs = array_values(array_diff(pluck($roster, 'studentID'), $absentIDs));
 					$this->notification_lib->notify(array(
 						'title' => 'Attendance Updated',
 						'message' => 'Your attendance has been marked for ' . $day . '-' . $monthyear . '.',
@@ -724,6 +736,68 @@ class Sattendance extends Api_Controller
 			)
 		);
 		return $rules;
+	}
+
+	/**
+	 * Today's absences for the logged-in student, or a parent's children — drives the
+	 * "absent today" popup the app shows on launch/resume. Students on approved leave
+	 * are left out. Returns [{studentID, name, date, subjects[]}].
+	 */
+	public function todayabsent_get()
+	{
+		$usertypeID   = $this->session->userdata('usertypeID');
+		$schoolyearID = $this->session->userdata('defaultschoolyearID');
+		$absences     = [];
+
+		if ($usertypeID == 3 || $usertypeID == 4) {
+			$day       = (int) date('j');
+			$monthyear = date('m-Y');
+			$today     = date('Y-m-d');
+			$aday      = 'a'.$day;
+
+			if ($usertypeID == 3) {
+				$student  = $this->studentrelation_m->get_single_student(array('srstudentID' => $this->session->userdata('loginuserID'), 'srschoolyearID' => $schoolyearID));
+				$students = customCompute($student) ? [$student] : [];
+			} else {
+				// Scoped to this parent's own children by Studentrelation_m::userRelation().
+				$students = $this->studentrelation_m->get_order_by_student(array('srschoolyearID' => $schoolyearID));
+			}
+
+			$subjectMode = ($this->data['siteinfos']->attendance == 'subject');
+			$subjectNames = $subjectMode ? pluck($this->subject_m->get_subject(), 'subject', 'subjectID') : [];
+
+			foreach ((array) $students as $student) {
+				$onLeave = $this->leaveapplication_m->get_order_by_leaveapplication(array('create_usertypeID' => 3, 'create_userID' => $student->srstudentID, 'status' => 1, 'from_date <=' => $today, 'to_date >=' => $today));
+				if (customCompute($onLeave)) {
+					continue;
+				}
+
+				$where = array('schoolyearID' => $schoolyearID, 'studentID' => $student->srstudentID, 'monthyear' => $monthyear, $aday => 'A');
+				$rows  = $subjectMode ? $this->subjectattendance_m->get_order_by_sub_attendance($where) : $this->sattendance_m->get_order_by_attendance($where);
+				if (customCompute($rows)) {
+					$subjects = [];
+					if ($subjectMode) {
+						foreach ($rows as $row) {
+							if (isset($subjectNames[$row->subjectID])) {
+								$subjects[] = $subjectNames[$row->subjectID];
+							}
+						}
+					}
+					$absences[] = array(
+						'studentID' => $student->srstudentID,
+						'name'      => $student->srname,
+						'date'      => $today,
+						'subjects'  => $subjects,
+					);
+				}
+			}
+		}
+
+		$this->response([
+			'status'  => true,
+			'message' => 'Success',
+			'data'    => $absences
+		], REST_Controller::HTTP_OK);
 	}
 
 	public function unique_classes() 

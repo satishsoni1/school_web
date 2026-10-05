@@ -773,6 +773,9 @@ class Student extends Admin_Controller {
                     $array["state"] = $this->input->post("state");
                     $array["country"] = $this->input->post("country");
                     $array["registerNO"] = $this->input->post("registerNO");
+                    if ($this->db->field_exists('rte', 'student')) {
+                        $array["rte"] = $this->input->post("rte") ? 1 : 0;
+                    }
 
                     // Place of birth fields
                     $array["birth_place"] = $this->input->post("birth_place");
@@ -908,6 +911,9 @@ class Student extends Admin_Controller {
                             $array["country"] = $this->input->post("country");
                             $array["registerNO"] = $this->input->post("registerNO");
                             $array["parentID"] = $this->input->post("guargianID");
+                            if ($this->db->field_exists('rte', 'student')) {
+                                $array["rte"] = $this->input->post("rte") ? 1 : 0;
+                            }
 
                             // Place of birth fields updates
                             $array["birth_place"] = $this->input->post("birth_place");

@@ -206,6 +206,38 @@ class Api_Controller extends REST_Controller
         }
     }
 
+    /**
+     * Mark RTE students in a response payload: every student row/object in the top level of
+     * $data (single object or list) gets `rte` = true/false, matched by its student ID column.
+     */
+    protected function tagRte($data)
+    {
+        if (!is_array($data)) {
+            return $data;
+        }
+        $this->load->model('student_m');
+        $rteIDs = $this->student_m->get_rte_student_ids();
+        $tag = function ($row) use ($rteIDs) {
+            if (is_object($row)) {
+                foreach (array('maininvoicestudentID', 'srstudentID', 'studentID') as $key) {
+                    if (isset($row->$key)) {
+                        $row->rte = isset($rteIDs[$row->$key]);
+                        break;
+                    }
+                }
+            }
+            return $row;
+        };
+        foreach ($data as $key => $value) {
+            if (is_object($value)) {
+                $data[$key] = $tag($value);
+            } elseif (is_array($value)) {
+                $data[$key] = array_map($tag, $value);
+            }
+        }
+        return $data;
+    }
+
     public function getHolidays()
     {
         $schoolyearID   = $this->data['siteinfos']->school_year;

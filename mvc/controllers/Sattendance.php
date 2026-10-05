@@ -35,6 +35,7 @@ class Sattendance extends Admin_Controller {
 		$this->load->model('exam_m');
 		$this->load->model('studentrelation_m');
 		$this->load->model('leaveapplication_m');
+		$this->load->model('leavecategory_m');
 
 		$this->load->library("email");
 		$this->load->library('clickatell');
@@ -354,6 +355,8 @@ class Sattendance extends Admin_Controller {
 					}
 					
 					$this->data['students'] = $students;
+					$this->data['studentleaves'] = $this->leaveapplication_m->get_student_leaves_on_date(date('Y-m-d', strtotime($date)), $schoolyearID);
+					$this->data['leavecategorys'] = pluck($this->leavecategory_m->get_leavecategory(), 'leavecategory', 'leavecategoryID');
 
 					$this->data['monthyear'] = $monthyear;
 					$this->data['day'] = $explode_date[0];
@@ -445,6 +448,11 @@ class Sattendance extends Admin_Controller {
 				} else {
 					$data = array('a'.abs($day) => "A",'schoolyearID' => $schoolyearID,'classesID'=>$classes,'monthyear'=>$monthyear);
 					$students = $this->sattendance_m->get_order_by_attendance($data);
+				}
+
+				if($updateStatus && customCompute($students)) {
+					list($month, $year) = explode('-', $monthyear);
+					$this->notification_lib->notifyAbsentees(pluck($students, 'studentID'), sprintf('%04d-%02d-%02d', $year, $month, abs($day)));
 				}
 
 				if($f && customCompute($students)) {

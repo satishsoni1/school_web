@@ -1,6 +1,6 @@
 <div class="box">
     <div class="box-header">
-        <h3 class="box-title"><i class="fa fa-pencil"></i> Edit Test Schedule Row</h3>
+        <h3 class="box-title"><i class="fa fa-pencil"></i> Edit Exam Timetable Row</h3>
         <ol class="breadcrumb">
             <li><a href="<?=base_url("dashboard/index")?>"><i class="fa fa-laptop"></i> <?=$this->lang->line('menu_dashboard')?></a></li>
             <li><a href="<?=base_url('plannermanager/index')?>">Planner &amp; Test Manager</a></li>
@@ -17,12 +17,21 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-2 control-label">Class</label>
+                <label class="col-sm-2 control-label">Grade</label>
                 <div class="col-sm-4">
-                    <select class="form-control" name="classesID" required>
-                        <option value="">Select</option>
-                        <?php foreach ($classes as $c): ?>
-                            <option value="<?=$c->classesID?>" <?=($schedule->classesID == $c->classesID ? 'selected' : '')?>><?=html_escape($c->classes)?></option>
+                    <select class="form-control" name="grade" required>
+                        <?php foreach ($grades as $g): ?>
+                            <option value="<?=$g?>" <?=($schedule->grade == $g ? 'selected' : '')?>>Grade <?=$g?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Exam</label>
+                <div class="col-sm-4">
+                    <select class="form-control" name="exam" required>
+                        <?php foreach ($exams as $e): ?>
+                            <option value="<?=html_escape($e)?>" <?=($schedule->exam == $e ? 'selected' : '')?>><?=html_escape($e)?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

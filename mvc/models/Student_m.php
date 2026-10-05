@@ -63,6 +63,23 @@ class student_m extends MY_Model {
 		return $query;
 	}
 
+	/**
+	 * IDs of RTE (Right to Education quota) students, as [studentID => true].
+	 * Empty until db_migration_student_rte.sql has added the student.rte column.
+	 */
+	public function get_rte_student_ids() {
+		static $ids = null;
+		if ($ids === null) {
+			$ids = [];
+			if ($this->db->field_exists('rte', 'student')) {
+				foreach ($this->db->select('studentID')->where('rte', 1)->get('student')->result() as $row) {
+					$ids[$row->studentID] = true;
+				}
+			}
+		}
+		return $ids;
+	}
+
 	public function get_student($id=NULL, $single=FALSE) {
 		$usertypeID = $this->session->userdata('usertypeID');
 		if($usertypeID == 2) {

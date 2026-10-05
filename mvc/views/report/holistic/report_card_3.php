@@ -240,7 +240,7 @@ if (!function_exists('feel_mark')) {
       <div class="card">
         <h3>Photograph</h3>
         <div class="passport-photo">
-          <img style="width:100%; height:100%; object-fit:cover;" src="<?= pdfimagelink($student->photo) ?>" alt="Student Photo" />
+          <img style="width:100%; height:100%; object-fit:cover;" src="<?= pdfimagelink($student->photo, isset($student_photo_path) ? $student_photo_path : null) ?>" alt="Student Photo" />
         </div>
       </div>
     </div>

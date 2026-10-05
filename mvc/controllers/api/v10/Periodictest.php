@@ -4,8 +4,19 @@ use Restserver\Libraries\REST_Controller;
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+/**
+ * Exam timetable + portion (syllabus) for the app's "Exams" page.
+ *
+ * Rows in periodic_test_schedule / periodic_test_syllabus are keyed by GRADE (1-10) and EXAM
+ * ('PT-1', 'Half Yearly', 'PT-2', 'Annual'); every section of a grade (Grade 1 A/B/C) shares them.
+ * The grade is read from the class name ("Grade 1 A" -> 1). Nursery/Prep classes have no grade.
+ * Until db_migration_exam_portion.sql adds the `grade`/`exam` columns, the legacy `classesID`
+ * column (which already held the grade number) is used and every row counts as PT-1.
+ */
 class Periodictest extends Api_Controller
 {
+    const EXAMS = ['PT-1', 'Half Yearly', 'PT-2', 'Annual'];
+
     public function __construct()
     {
         parent::__construct();
@@ -17,41 +28,54 @@ class Periodictest extends Api_Controller
      */
     public function schedule_get($classID = null)
     {
-        $loginuserID = $this->session->userdata("loginuserID");
-        $usertypeID = $this->session->userdata("usertypeID");
+        $this->respond('periodic_test_schedule', 'schedules', $classID, ['test_date' => 'ASC', 'id' => 'ASC']);
+    }
 
-        // Automatically find class ID if not supplied for student logins
-        if (empty($classID) && $usertypeID == 3) {
-            $student = $this->db->get_where('student', array('studentID' => $loginuserID))->row();
-            if (!empty($student)) {
-                $classID = isset($student->classesID) ? $student->classesID : 0;
+    /**
+     * GET /api/v10/periodictest/syllabus/$classesID
+     */
+    public function syllabus_get($classID = null)
+    {
+        $this->respond('periodic_test_syllabus', 'syllabuss', $classID, ['id' => 'ASC']);
+    }
+
+    private function respond($table, $key, $classID, array $orderBy)
+    {
+        $classes  = $this->db->get('classes')->result_array();
+        $classMap = array_column($classes, 'classes', 'classesID');
+
+        $classID = (int) $classID ?: $this->studentClassID();
+        $grade   = $classID && isset($classMap[$classID]) ? $this->gradeOf($classMap[$classID]) : null;
+
+        $rows = [];
+        if ($grade !== null) {
+            $hasGrade = $this->db->field_exists('grade', $table);
+            $this->db->from($table);
+            $this->db->where($hasGrade ? 'grade' : 'classesID', $grade);
+            foreach ($orderBy as $column => $direction) {
+                $this->db->order_by($column, $direction);
             }
+            $rows = $this->db->get()->result_array();
         }
 
-        $classes = $this->db->get('classes')->result_array();
-        
-        $this->db->select('*');
-        $this->db->from('periodic_test_schedule');
-        if (!empty($classID)) {
-            $this->db->where('classesID', $classID);
+        $examOrder = array_flip(self::EXAMS);
+        foreach ($rows as &$row) {
+            $row['exam']       = isset($row['exam']) && $row['exam'] !== '' ? $row['exam'] : 'PT-1';
+            $row['grade']      = $grade;
+            $row['class_name'] = 'Grade ' . $grade;
         }
-        $this->db->order_by('test_date', 'ASC');
-        $query = $this->db->get();
-        $schedules = $query->result_array();
-
-        // Map class names
-        $classMap = [];
-        foreach ($classes as $c) {
-            $classMap[$c['classesID']] = $c['classes'];
-        }
-
-        foreach ($schedules as &$sch) {
-            $cid = $sch['classesID'];
-            $sch['class_name'] = isset($classMap[$cid]) ? $classMap[$cid] : 'Grade ' . $cid;
-        }
+        unset($row);
+        // Keep the original order within an exam; exams in calendar order.
+        usort($rows, function ($a, $b) use ($examOrder) {
+            $ea = isset($examOrder[$a['exam']]) ? $examOrder[$a['exam']] : 99;
+            $eb = isset($examOrder[$b['exam']]) ? $examOrder[$b['exam']] : 99;
+            return $ea - $eb;
+        });
 
         $this->retdata['classes'] = $classes;
-        $this->retdata['schedules'] = $schedules;
+        $this->retdata['grade']   = $grade;
+        $this->retdata['exams']   = array_values(array_unique(array_column($rows, 'exam')));
+        $this->retdata[$key]      = $rows;
 
         $this->response([
             'status'    => true,
@@ -60,50 +84,26 @@ class Periodictest extends Api_Controller
         ], REST_Controller::HTTP_OK);
     }
 
-    /**
-     * GET /api/v10/periodictest/syllabus/$classesID
-     */
-    public function syllabus_get($classID = null)
+    /** The logged-in student's class for the current school year (0 if not a student). */
+    private function studentClassID()
     {
-        $loginuserID = $this->session->userdata("loginuserID");
-        $usertypeID = $this->session->userdata("usertypeID");
-
-        // Automatically find class ID if not supplied for student logins
-        if (empty($classID) && $usertypeID == 3) {
-            $student = $this->db->get_where('student', array('studentID' => $loginuserID))->row();
-            if (!empty($student)) {
-                $classID = isset($student->classesID) ? $student->classesID : 0;
-            }
+        if ($this->session->userdata('usertypeID') != 3) {
+            return 0;
         }
-
-        $classes = $this->db->get('classes')->result_array();
-        
-        $this->db->select('*');
-        $this->db->from('periodic_test_syllabus');
-        if (!empty($classID)) {
-            $this->db->where('classesID', $classID);
+        $relation = $this->db->get_where('studentrelation', array(
+            'srstudentID'    => $this->session->userdata('loginuserID'),
+            'srschoolyearID' => $this->session->userdata('defaultschoolyearID'),
+        ))->row();
+        if ($relation) {
+            return (int) $relation->srclassesID;
         }
-        $query = $this->db->get();
-        $syllabusList = $query->result_array();
+        $student = $this->db->get_where('student', array('studentID' => $this->session->userdata('loginuserID')))->row();
+        return $student ? (int) $student->classesID : 0;
+    }
 
-        // Map class names
-        $classMap = [];
-        foreach ($classes as $c) {
-            $classMap[$c['classesID']] = $c['classes'];
-        }
-
-        foreach ($syllabusList as &$syl) {
-            $cid = $syl['classesID'];
-            $syl['class_name'] = isset($classMap[$cid]) ? $classMap[$cid] : 'Grade ' . $cid;
-        }
-
-        $this->retdata['classes'] = $classes;
-        $this->retdata['syllabuss'] = $syllabusList;
-
-        $this->response([
-            'status'    => true,
-            'message'   => 'Success',
-            'data'      => $this->retdata
-        ], REST_Controller::HTTP_OK);
+    /** "Grade 1 A" -> 1, "Grade 10" -> 10; null for Nursery / Prep / other classes. */
+    private function gradeOf($className)
+    {
+        return preg_match('/grade\s*-?\s*(\d+)/i', (string) $className, $m) ? (int) $m[1] : null;
     }
 }

@@ -10,6 +10,15 @@ class Plannermanager extends Admin_Controller
 {
     private $plannerTypes = array('holiday', 'activity', 'sports', 'exam', 'test', 'event');
 
+    // Exam timetable/portion rows are keyed by GRADE (1-10) and EXAM; the app shows a student
+    // the rows of their grade (from the class name "Grade 1 A"). `classesID` is kept = grade for
+    // older rows. See db_migration_exam_portion.sql.
+    private $exams  = array('PT-1', 'Half Yearly', 'PT-2', 'Annual');
+
+    // Academic planner audiences: Grades 1-10 vs Nursery/Prep (academic_planner.audience).
+    private $plannerAudiences = array('grade' => 'Grades 1-10', 'prep' => 'Pre-Primary (Nursery / Prep)');
+    private $grades = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
     function __construct()
     {
         parent::__construct();
@@ -27,9 +36,54 @@ class Plannermanager extends Admin_Controller
         return true;
     }
 
-    private function classList()
+    /** True once db_migration_exam_portion.sql has added the grade/exam columns. */
+    private function hasExamColumns($table)
     {
-        return $this->classes_m->get_classes();
+        return $this->db->field_exists('exam', $table) && $this->db->field_exists('grade', $table);
+    }
+
+    /** Grade + exam from the posted form, or null when invalid. */
+    private function postedGradeExam()
+    {
+        $grade = (int) $this->input->post('grade');
+        $exam  = (string) $this->input->post('exam');
+        if (!in_array($grade, $this->grades) || !in_array($exam, $this->exams)) {
+            return null;
+        }
+        return array($grade, $exam);
+    }
+
+    /** Columns identifying a row's grade/exam for insert/update. */
+    private function gradeExamColumns($table, $grade, $exam)
+    {
+        $columns = array('classesID' => $grade);
+        if ($this->hasExamColumns($table)) {
+            $columns['grade'] = $grade;
+            $columns['exam']  = $exam;
+        }
+        return $columns;
+    }
+
+    /** Apply the index page's ?grade= / ?exam= filters to a periodic_test_* query. */
+    private function filterGradeExam($table, $grade, $exam)
+    {
+        $hasColumns = $this->hasExamColumns($table);
+        if ($grade) {
+            $this->db->where($hasColumns ? 'grade' : 'classesID', $grade);
+        }
+        if ($exam && $hasColumns) {
+            $this->db->where('exam', $exam);
+        }
+    }
+
+    private function decorate($rows)
+    {
+        foreach ($rows as $row) {
+            $row->grade = isset($row->grade) && $row->grade ? $row->grade : $row->classesID;
+            $row->exam  = isset($row->exam) && $row->exam !== '' ? $row->exam : 'PT-1';
+            $row->class_name = 'Grade ' . $row->grade;
+        }
+        return $rows;
     }
 
     public function index()
@@ -38,31 +92,32 @@ class Plannermanager extends Admin_Controller
             return;
         }
 
+        $hasAudience = $this->db->field_exists('audience', 'academic_planner');
+        $filterPlanner = isset($this->plannerAudiences[$this->input->get('planner')]) ? $this->input->get('planner') : '';
+        if ($hasAudience && $filterPlanner) {
+            $this->db->where('audience', $filterPlanner);
+        }
         $this->db->order_by('event_date', 'ASC');
         $this->data['planner_events'] = $this->db->get('academic_planner')->result();
+        $this->data['hasAudience'] = $hasAudience;
+        $this->data['filterPlanner'] = $filterPlanner;
+        $this->data['plannerAudiences'] = $this->plannerAudiences;
 
-        $classes = $this->classList();
-        $classMap = array();
-        foreach ($classes as $c) {
-            $classMap[$c->classesID] = $c->classes;
-        }
+        $filterGrade = (int) $this->input->get('grade');
+        $filterExam  = in_array($this->input->get('exam'), $this->exams) ? $this->input->get('exam') : '';
 
+        $this->filterGradeExam('periodic_test_schedule', $filterGrade, $filterExam);
         $this->db->order_by('test_date', 'ASC');
-        $schedules = $this->db->get('periodic_test_schedule')->result();
-        foreach ($schedules as &$s) {
-            $s->class_name = isset($classMap[$s->classesID]) ? $classMap[$s->classesID] : ('Grade ' . $s->classesID);
-        }
-        unset($s);
-        $this->data['test_schedules'] = $schedules;
+        $this->data['test_schedules'] = $this->decorate($this->db->get('periodic_test_schedule')->result());
 
-        $syllabus = $this->db->get('periodic_test_syllabus')->result();
-        foreach ($syllabus as &$sy) {
-            $sy->class_name = isset($classMap[$sy->classesID]) ? $classMap[$sy->classesID] : ('Grade ' . $sy->classesID);
-        }
-        unset($sy);
-        $this->data['test_syllabus'] = $syllabus;
+        $this->filterGradeExam('periodic_test_syllabus', $filterGrade, $filterExam);
+        $this->db->order_by('id', 'ASC');
+        $this->data['test_syllabus'] = $this->decorate($this->db->get('periodic_test_syllabus')->result());
 
-        $this->data['classes'] = $classes;
+        $this->data['filterGrade'] = $filterGrade;
+        $this->data['filterExam']  = $filterExam;
+        $this->data['grades']      = $this->grades;
+        $this->data['exams']       = $this->exams;
         $this->data['plannerTypes'] = $this->plannerTypes;
         $this->data['subview'] = 'plannermanager/index';
         $this->load->view('_layout_main', $this->data);
@@ -81,12 +136,23 @@ class Plannermanager extends Admin_Controller
         $description = trim((string) $this->input->post('description'));
 
         if ($this->validPlanner($eventDate, $title, $type)) {
-            $this->db->insert('academic_planner', array(
+            $row = array(
                 'event_date'  => date('Y-m-d', strtotime($eventDate)),
                 'title'       => $title,
                 'type'        => $type,
                 'description' => $description,
-            ));
+            );
+            if ($this->db->field_exists('audience', 'academic_planner')) {
+                // "both" adds the event to each planner.
+                $audience = $this->input->post('audience');
+                $targets = $audience === 'both' ? array_keys($this->plannerAudiences)
+                    : array(isset($this->plannerAudiences[$audience]) ? $audience : 'grade');
+                foreach ($targets as $target) {
+                    $this->db->insert('academic_planner', $row + array('audience' => $target));
+                }
+            } else {
+                $this->db->insert('academic_planner', $row);
+            }
             $this->session->set_flashdata('success', 'Planner event added.');
         } else {
             $this->session->set_flashdata('error', 'Please provide a valid date, title and type.');
@@ -113,12 +179,17 @@ class Plannermanager extends Admin_Controller
             $type = $this->input->post('type');
             $description = trim((string) $this->input->post('description'));
             if ($this->validPlanner($eventDate, $title, $type)) {
-                $this->db->where('id', $id)->update('academic_planner', array(
+                $update = array(
                     'event_date'  => date('Y-m-d', strtotime($eventDate)),
                     'title'       => $title,
                     'type'        => $type,
                     'description' => $description,
-                ));
+                );
+                $audience = $this->input->post('audience');
+                if (isset($this->plannerAudiences[$audience]) && $this->db->field_exists('audience', 'academic_planner')) {
+                    $update['audience'] = $audience;
+                }
+                $this->db->where('id', $id)->update('academic_planner', $update);
                 $this->session->set_flashdata('success', 'Planner event updated.');
                 redirect(base_url('plannermanager/index'));
                 return;
@@ -128,6 +199,7 @@ class Plannermanager extends Admin_Controller
 
         $this->data['event'] = $row;
         $this->data['plannerTypes'] = $this->plannerTypes;
+        $this->data['plannerAudiences'] = $this->plannerAudiences;
         $this->data['subview'] = 'plannermanager/planner_edit';
         $this->load->view('_layout_main', $this->data);
     }
@@ -155,19 +227,18 @@ class Plannermanager extends Admin_Controller
             return;
         }
         $testDate = $this->input->post('test_date');
-        $classesID = (int) $this->input->post('classesID');
+        $gradeExam = $this->postedGradeExam();
         $subject = trim((string) $this->input->post('subject'));
 
-        if ($testDate && strtotime($testDate) && $classesID > 0 && $subject !== '') {
+        if ($testDate && strtotime($testDate) && $gradeExam && $subject !== '') {
             $this->db->insert('periodic_test_schedule', array(
                 'test_date' => date('Y-m-d', strtotime($testDate)),
                 'day'       => strtoupper(date('l', strtotime($testDate))),
-                'classesID' => $classesID,
                 'subject'   => $subject,
-            ));
-            $this->session->set_flashdata('success', 'Test schedule row added.');
+            ) + $this->gradeExamColumns('periodic_test_schedule', $gradeExam[0], $gradeExam[1]));
+            $this->session->set_flashdata('success', 'Exam timetable row added.');
         } else {
-            $this->session->set_flashdata('error', 'Please provide a valid date, class and subject.');
+            $this->session->set_flashdata('error', 'Please provide a valid date, grade, exam and subject.');
         }
         redirect(base_url('plannermanager/index'));
     }
@@ -187,24 +258,24 @@ class Plannermanager extends Admin_Controller
 
         if ($this->input->post()) {
             $testDate = $this->input->post('test_date');
-            $classesID = (int) $this->input->post('classesID');
+            $gradeExam = $this->postedGradeExam();
             $subject = trim((string) $this->input->post('subject'));
-            if ($testDate && strtotime($testDate) && $classesID > 0 && $subject !== '') {
+            if ($testDate && strtotime($testDate) && $gradeExam && $subject !== '') {
                 $this->db->where('id', $id)->update('periodic_test_schedule', array(
                     'test_date' => date('Y-m-d', strtotime($testDate)),
                     'day'       => strtoupper(date('l', strtotime($testDate))),
-                    'classesID' => $classesID,
                     'subject'   => $subject,
-                ));
-                $this->session->set_flashdata('success', 'Test schedule row updated.');
+                ) + $this->gradeExamColumns('periodic_test_schedule', $gradeExam[0], $gradeExam[1]));
+                $this->session->set_flashdata('success', 'Exam timetable row updated.');
                 redirect(base_url('plannermanager/index'));
                 return;
             }
-            $this->session->set_flashdata('error', 'Please provide a valid date, class and subject.');
+            $this->session->set_flashdata('error', 'Please provide a valid date, grade, exam and subject.');
         }
 
-        $this->data['schedule'] = $row;
-        $this->data['classes'] = $this->classList();
+        $this->data['schedule'] = current($this->decorate(array($row)));
+        $this->data['grades'] = $this->grades;
+        $this->data['exams'] = $this->exams;
         $this->data['subview'] = 'plannermanager/test_edit';
         $this->load->view('_layout_main', $this->data);
     }
@@ -226,19 +297,18 @@ class Plannermanager extends Admin_Controller
         if (!$this->requireAdmin()) {
             return;
         }
-        $classesID = (int) $this->input->post('classesID');
+        $gradeExam = $this->postedGradeExam();
         $subject = trim((string) $this->input->post('subject'));
         $syllabus = trim((string) $this->input->post('syllabus'));
 
-        if ($classesID > 0 && $subject !== '' && $syllabus !== '') {
+        if ($gradeExam && $subject !== '' && $syllabus !== '') {
             $this->db->insert('periodic_test_syllabus', array(
-                'classesID' => $classesID,
                 'subject'   => $subject,
                 'syllabus'  => $syllabus,
-            ));
-            $this->session->set_flashdata('success', 'Syllabus row added.');
+            ) + $this->gradeExamColumns('periodic_test_syllabus', $gradeExam[0], $gradeExam[1]));
+            $this->session->set_flashdata('success', 'Portion row added.');
         } else {
-            $this->session->set_flashdata('error', 'Please provide a class, subject and syllabus text.');
+            $this->session->set_flashdata('error', 'Please provide a grade, exam, subject and portion text.');
         }
         redirect(base_url('plannermanager/index'));
     }
@@ -257,24 +327,24 @@ class Plannermanager extends Admin_Controller
         }
 
         if ($this->input->post()) {
-            $classesID = (int) $this->input->post('classesID');
+            $gradeExam = $this->postedGradeExam();
             $subject = trim((string) $this->input->post('subject'));
             $syllabus = trim((string) $this->input->post('syllabus'));
-            if ($classesID > 0 && $subject !== '' && $syllabus !== '') {
+            if ($gradeExam && $subject !== '' && $syllabus !== '') {
                 $this->db->where('id', $id)->update('periodic_test_syllabus', array(
-                    'classesID' => $classesID,
                     'subject'   => $subject,
                     'syllabus'  => $syllabus,
-                ));
-                $this->session->set_flashdata('success', 'Syllabus row updated.');
+                ) + $this->gradeExamColumns('periodic_test_syllabus', $gradeExam[0], $gradeExam[1]));
+                $this->session->set_flashdata('success', 'Portion row updated.');
                 redirect(base_url('plannermanager/index'));
                 return;
             }
-            $this->session->set_flashdata('error', 'Please provide a class, subject and syllabus text.');
+            $this->session->set_flashdata('error', 'Please provide a grade, exam, subject and portion text.');
         }
 
-        $this->data['syllabus'] = $row;
-        $this->data['classes'] = $this->classList();
+        $this->data['syllabus'] = current($this->decorate(array($row)));
+        $this->data['grades'] = $this->grades;
+        $this->data['exams'] = $this->exams;
         $this->data['subview'] = 'plannermanager/syllabus_edit';
         $this->load->view('_layout_main', $this->data);
     }

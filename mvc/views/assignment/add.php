@@ -262,22 +262,20 @@ $(function() {
         $(".image-preview-input-title").text("<?=$this->lang->line('assignment_file_browse')?>"); 
     }); 
     // Create the preview image
-    $(".image-preview-input input:file").change(function (){     
-        var img = $('<img/>', {
-            id: 'dynamic',
-            width:250,
-            height:200,
-            overflow:'hidden'
-        });      
-        var file = this.files[0];
-        var reader = new FileReader();
-        // Set preview image into the popover data-content
-        reader.onload = function (e) {
-            $(".image-preview-input-title").text("<?=$this->lang->line('assignment_file_browse')?>");
-            $(".image-preview-clear").show();
-            $(".image-preview-filename").val(file.name);
-        }        
-        reader.readAsDataURL(file);
+    // Max upload size the server accepts (smaller of PHP's upload_max_filesize / post_max_size).
+    var maxUploadBytes = <?=min(array_map(function($v) { $n = (float) $v; switch (strtoupper(substr(trim($v), -1))) { case 'G': $n *= 1024; case 'M': $n *= 1024; case 'K': $n *= 1024; } return (int) $n; }, array(ini_get('upload_max_filesize'), ini_get('post_max_size'))))?>;
+    $(".image-preview-input input:file").change(function (){
+        var file = this.files && this.files[0];
+        if (!file) { return; }
+        if (file.size > maxUploadBytes) {
+            alert('This file is ' + (file.size / 1048576).toFixed(1) + ' MB. The maximum allowed size is ' + Math.floor(maxUploadBytes / 1048576) + ' MB.');
+            $(this).val('');
+            $(".image-preview-filename").val('');
+            return;
+        }
+        $(".image-preview-input-title").text("<?=$this->lang->line('assignment_file_browse')?>");
+        $(".image-preview-clear").show();
+        $(".image-preview-filename").val(file.name);
     });  
 });
 

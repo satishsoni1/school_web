@@ -248,6 +248,14 @@ if (isset($student->father_name) && !empty($student->father_name)) {
                                 <input type="text" class="form-control" id="registerNO" name="registerNO" value="<?=set_value('registerNO', $student->srregisterNO)?>">
                                 <span class="text-danger"><?=form_error('registerNO')?></span>
                             </div>
+                            <?php if ($this->db->field_exists('rte', 'student')) { ?>
+                            <div class="form-group">
+                                <label style="font-weight: 600;">
+                                    <input type="checkbox" name="rte" value="1" <?=(set_value('rte', isset($student->rte) ? $student->rte : 0) == 1) ? 'checked' : ''?>>
+                                    RTE student (Right to Education quota)
+                                </label>
+                            </div>
+                            <?php } ?>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group <?=form_error('roll') ? 'has-error' : ''?>">

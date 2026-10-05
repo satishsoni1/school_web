@@ -4,6 +4,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Invoice extends Api_Controller 
 {
+    // Every response from this controller marks RTE students (rte: true) for the app's badge.
+    public function response($data = NULL, $http_code = NULL, $continue = FALSE)
+    {
+        if (is_array($data) && isset($data['data'])) {
+            $data['data'] = $this->tagRte($data['data']);
+        }
+        return parent::response($data, $http_code, $continue);
+    }
+
     public function __construct() 
     {
         parent::__construct();

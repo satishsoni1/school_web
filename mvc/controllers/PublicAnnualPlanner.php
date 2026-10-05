@@ -40,11 +40,15 @@ class PublicAnnualPlanner extends Frontend_Controller
         $dir = FCPATH . 'uploads/annual_planners/';
         $filepath = $dir . 'planner_' . $classesID . '.pdf';
 
-        if ($classesID <= 0 || !file_exists($filepath)) {
-            $filepath = $dir . 'annualplaner.pdf';
+        // A class-specific PDF wins; otherwise Nursery/Prep get the pre-primary planner and
+        // everyone else the Grades 1-10 planner. Empty (0-byte) files are ignored.
+        if ($classesID <= 0 || !is_file($filepath) || filesize($filepath) == 0) {
+            $class = $classesID > 0 ? $this->db->get_where('classes', array('classesID' => $classesID))->row() : null;
+            $isPrep = $class && preg_match('/nursery|prep|pre[\s-]*primary|kg/i', $class->classes);
+            $filepath = $dir . ($isPrep ? 'planner_prep.pdf' : 'annualplaner.pdf');
         }
 
-        if (file_exists($filepath)) {
+        if (is_file($filepath) && filesize($filepath) > 0) {
             header('Content-Type: application/pdf');
             header('Content-Disposition: inline; filename="' . basename($filepath) . '"');
             header('Content-Transfer-Encoding: binary');

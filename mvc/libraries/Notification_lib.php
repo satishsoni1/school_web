@@ -112,6 +112,72 @@ class Notification_lib
     }
 
     /**
+     * Send an "Absent" push + in-app notification to each absent student and their parent.
+     * Students on an approved leave that day are skipped, and a student who was already
+     * alerted for that date (attendance re-saved) is not alerted again.
+     *
+     * @param int[]  $studentIDs absent students
+     * @param string $date       Y-m-d
+     * @return int[] studentIDs actually notified
+     */
+    public function notifyAbsentees($studentIDs, $date)
+    {
+        $studentIDs = array_values(array_unique(array_filter(array_map('intval', (array) $studentIDs))));
+        if (!customCompute($studentIDs)) {
+            return [];
+        }
+
+        $onLeave = array_column($this->CI->db->select('create_userID')
+            ->where('create_usertypeID', 3)->where('status', 1)
+            ->where('from_date <=', $date)->where('to_date >=', $date)
+            ->where_in('create_userID', $studentIDs)
+            ->get('leaveapplications')->result_array(), 'create_userID');
+
+        $names = array_column($this->CI->db->select('studentID, name')
+            ->where_in('studentID', $studentIDs)
+            ->get('student')->result_array(), 'name', 'studentID');
+
+        $prettyDate = date('d M Y', strtotime($date));
+        $notified = [];
+        foreach ($studentIDs as $studentID) {
+            if (in_array($studentID, $onLeave)) {
+                continue;
+            }
+            $name = isset($names[$studentID]) ? $names[$studentID] : 'Your child';
+            $message = $name . ' was marked absent on ' . $prettyDate . '.';
+
+            $alreadySent = $this->CI->db->where(['type' => 'absent', 'referenceID' => $studentID, 'message' => $message])
+                ->count_all_results('notifications');
+            if ($alreadySent) {
+                continue;
+            }
+
+            $this->notify([
+                'title'       => 'Absent: ' . $name,
+                'message'     => $message,
+                'type'        => 'absent',
+                'referenceID' => $studentID,
+                'recipients'  => $this->studentsToRecipients([$studentID]),
+            ]);
+            $notified[] = $studentID;
+        }
+        return $notified;
+    }
+
+    /**
+     * Remove the in-app notification history for a deleted record (e.g. a deleted notice),
+     * so it no longer shows in users' notification lists. Recipients cascade via FK.
+     */
+    public function removeForReference($type, $referenceID)
+    {
+        $notificationIDs = array_column($this->CI->db->select('notificationID')->where(['type' => $type, 'referenceID' => $referenceID])->get('notifications')->result_array(), 'notificationID');
+        if (customCompute($notificationIDs)) {
+            $this->CI->db->where_in('notificationID', $notificationIDs)->delete('notification_recipients');
+            $this->CI->db->where_in('notificationID', $notificationIDs)->delete('notifications');
+        }
+    }
+
+    /**
      * Expand a list of studentIDs into recipient pairs for the student themselves
      * and their parent, using the same studentrelation/parents lookup already used
      * by the absent-email/SMS flow in api/v10/Sattendance.php.

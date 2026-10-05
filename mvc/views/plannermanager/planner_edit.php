@@ -32,6 +32,18 @@
                     </select>
                 </div>
             </div>
+            <?php if (isset($event->audience)) { ?>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Planner</label>
+                <div class="col-sm-4">
+                    <select class="form-control" name="audience">
+                        <?php foreach ($plannerAudiences as $key => $label): ?>
+                            <option value="<?=$key?>" <?=($event->audience === $key ? 'selected' : '')?>><?=html_escape($label)?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <?php } ?>
             <div class="form-group">
                 <label class="col-sm-2 control-label">Description</label>
                 <div class="col-sm-4">

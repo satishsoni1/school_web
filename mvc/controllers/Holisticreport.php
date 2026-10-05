@@ -12,6 +12,7 @@ class Holisticreport extends Admin_Controller
         $this->load->model('schoolyear_m');
         $this->load->model('teacherclasses_m');
         $this->load->model('sattendance_m');
+        $this->load->model('holisticsnapshot_m');
     }
 
     // -------------------------------------------------------------------------
@@ -34,25 +35,6 @@ class Holisticreport extends Admin_Controller
     }
 
     // -------------------------------------------------------------------------
-    // AJAX – Section dropdown
-    // -------------------------------------------------------------------------
-    public function getSection()
-    {
-        $classesID = (int) $this->input->post('classesID');
-        if ($classesID <= 0) {
-            echo "<option value='0'>Please Select Section</option>";
-            return;
-        }
-        $sections = $this->section_m->general_get_order_by_section(array('classesID' => $classesID));
-        echo "<option value='0'>Please Select Section</option>";
-        if (customCompute($sections)) {
-            foreach ($sections as $section) {
-                echo "<option value='" . $section->sectionID . "'>" . $section->section . "</option>";
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
     // AJAX – Student list
     // -------------------------------------------------------------------------
     public function getStudentList()
@@ -60,7 +42,6 @@ class Holisticreport extends Admin_Controller
         $retArray = array('status' => FALSE, 'render' => '');
         if ($_POST) {
             $classesID    = (int) $this->input->post('classesID');
-            $sectionID    = (int) $this->input->post('sectionID');
             $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
 
             if ($classesID > 0) {
@@ -68,18 +49,36 @@ class Holisticreport extends Admin_Controller
                     'srschoolyearID' => $schoolyearID,
                     'srclassesID'    => $classesID,
                 );
-                if ($sectionID > 0) {
-                    $queryArray['srsectionID'] = $sectionID;
-                }
                 $this->data['students']  = $this->studentrelation_m->general_get_order_by_student($queryArray);
                 $this->data['classesID'] = $classesID;
-                $this->data['sectionID'] = $sectionID;
                 $retArray['render']      = $this->load->view('report/holistic/student_list', $this->data, TRUE);
                 $retArray['status']      = TRUE;
             }
         }
         echo json_encode($retArray);
         exit;
+    }
+
+    // -------------------------------------------------------------------------
+    // REPORT SNAPSHOT – see Holisticsnapshot_m. While the year is the running
+    // school year the snapshot is refreshed on every save/view; afterwards it
+    // is frozen, so old reports keep that year's photo, details and sign.
+    // -------------------------------------------------------------------------
+    private function _sync_snapshot($studentID, $classesID, $schoolyearID)
+    {
+        $isRunningYear = ($schoolyearID == (int) $this->data['siteinfos']->school_year);
+        return $this->holisticsnapshot_m->sync($studentID, $classesID, $schoolyearID, $isRunningYear);
+    }
+
+    /** Fill $this->data with the report's student/class/teacher details from its snapshot. */
+    private function _load_report_context($studentID, $classesID, $schoolyearID)
+    {
+        $context = $this->holisticsnapshot_m->report_context($this->_sync_snapshot($studentID, $classesID, $schoolyearID));
+        if ($context === null) {
+            return false;
+        }
+        $this->data = array_merge($this->data, $context);
+        return true;
     }
 
     // -------------------------------------------------------------------------
@@ -265,6 +264,7 @@ class Holisticreport extends Admin_Controller
                 $this->holisticprogress_m->insert_holisticprogress($db_array);
                 $this->session->set_flashdata('success', 'Information saved successfully');
             }
+            $this->_sync_snapshot($studentID, $classesID, $schoolyearID);
 
             redirect(base_url('holisticreport/index'));
         }
@@ -282,18 +282,11 @@ class Holisticreport extends Admin_Controller
         $classesID    = (int) $classesID;
         $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
 
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-            'srclassesID'    => $classesID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Student info, photo, class and teacher name/sign come from the report snapshot for
+        // this school year (frozen once the year is over), not from today's master data.
+        if (!$this->_load_report_context($studentID, $classesID, $schoolyearID)) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $classesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -346,9 +339,6 @@ class Holisticreport extends Admin_Controller
 
         // ── Attendance ────────────────────────────────────────────────────────
         
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
        
         if($classesID == 1){
                 $student = $this->sattendance_m->get_student_attendance_master($studentID);
@@ -580,6 +570,7 @@ class Holisticreport extends Admin_Controller
                 $this->holisticprogress_m->insert_holisticprogress($db_array);
                 $this->session->set_flashdata('success', 'Information saved successfully');
             }
+            $this->_sync_snapshot($studentID, $classesID, $schoolyearID);
 
             redirect(base_url('holisticreport/index'));
         }
@@ -593,18 +584,11 @@ class Holisticreport extends Admin_Controller
         $classesID    = (int) $classesID;
         $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
 
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-            'srclassesID'    => $classesID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Student info, photo, class and teacher name/sign come from the report snapshot for
+        // this school year (frozen once the year is over), not from today's master data.
+        if (!$this->_load_report_context($studentID, $classesID, $schoolyearID)) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $classesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -700,9 +684,6 @@ class Holisticreport extends Admin_Controller
         }
 
         $this->data['attendance_report'] = $attendance_results;
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_4', $this->data);
     }
@@ -851,6 +832,7 @@ class Holisticreport extends Admin_Controller
                 $this->holisticprogress_m->insert_holisticprogress($db_array);
                 $this->session->set_flashdata('success', 'Information saved successfully');
             }
+            $this->_sync_snapshot($studentID, $classesID, $schoolyearID);
 
             redirect(base_url('holisticreport/index'));
         }
@@ -864,18 +846,11 @@ class Holisticreport extends Admin_Controller
         $classesID    = (int) $classesID;
         $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
 
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-            'srclassesID'    => $classesID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Student info, photo, class and teacher name/sign come from the report snapshot for
+        // this school year (frozen once the year is over), not from today's master data.
+        if (!$this->_load_report_context($studentID, $classesID, $schoolyearID)) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $classesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -971,9 +946,6 @@ class Holisticreport extends Admin_Controller
         }
 
         $this->data['attendance_report'] = $attendance_results;
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_5', $this->data);
     }
@@ -983,18 +955,11 @@ class Holisticreport extends Admin_Controller
         $classesID    = (int) $classesID;
         $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
 
-        $this->data['student'] = $this->studentrelation_m->get_single_student(array(
-            'srstudentID'    => $studentID,
-            'srschoolyearID' => $schoolyearID,
-            'srclassesID'    => $classesID,
-        ));
-        if (!customCompute($this->data['student'])) {
+        // Student info, photo, class and teacher name/sign come from the report snapshot for
+        // this school year (frozen once the year is over), not from today's master data.
+        if (!$this->_load_report_context($studentID, $classesID, $schoolyearID)) {
             show_404();
         }
-
-        $this->data['classes']    = $this->classes_m->get_single_classes(array('classesID' => $classesID));
-        $this->data['section']    = $this->section_m->get_single_section(array('sectionID' => $this->data['student']->srsectionID));
-        $this->data['schoolyear'] = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
 
         $holistic_record = $this->holisticprogress_m->get_single_holisticprogress(array(
             'studentID'    => $studentID,
@@ -1090,9 +1055,6 @@ class Holisticreport extends Admin_Controller
         }
 
         $this->data['attendance_report'] = $attendance_results;
-        $teacher_data      = $this->teacherclasses_m->get_single_teacher_name($classesID);
-        $this->data['teacher_sign']  = ($teacher_data[0]==null)?'assets/sign/17.png':$teacher_data[0];
-        $this->data['teacher_name']  = $teacher_data[1] ?: 'Class Teacher';
 
         $this->load->view('report/holistic/report_card_6', $this->data);
     }

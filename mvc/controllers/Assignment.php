@@ -25,6 +25,14 @@ class Assignment extends Admin_Controller {
 		$this->load->library("notification_lib");
 		$language = $this->session->userdata('lang');
 		$this->lang->load('assignment', $language);	
+
+		// A file larger than PHP's post_max_size makes PHP silently drop the whole form
+		// ($_POST and $_FILES both empty), which looked like a broken page on phones where
+		// camera photos are large. Tell the user instead.
+		if($this->input->server('REQUEST_METHOD') === 'POST' && empty($_POST) && empty($_FILES) && (int) $this->input->server('CONTENT_LENGTH') > 0) {
+			$this->session->set_flashdata('error', 'The file is too large to upload. Maximum size is '.ini_get('post_max_size').'B.');
+			redirect(current_url());
+		}
 	}
 
 	protected function rules() {
@@ -82,7 +90,7 @@ class Assignment extends Admin_Controller {
 	public function fileuploadans() {
 		$new_file = "";
 		$original_file_name = '';
-		if($_FILES["file"]['name'] !="") {
+		if(isset($_FILES["file"]['name']) && $_FILES["file"]['name'] !="") {
 			$file_name = $_FILES["file"]['name'];
 			$original_file_name = $file_name;
 			$random = random19();
@@ -95,8 +103,6 @@ class Assignment extends Admin_Controller {
 				$config['allowed_types'] = "gif|jpg|png|jpeg|pdf|doc|xml|docx|GIF|JPG|PNG|JPEG|PDF|DOC|XML|DOCX|xls|xlsx|txt|ppt|csv|XLS|XLSX|TXT|PPT|CSV";
 				$config['file_name'] = $new_file;
 				$config['max_size'] = '100024';
-				$config['max_width'] = '3000';
-				$config['max_height'] = '3000';
 				$this->load->library('upload', $config);
 				if(!$this->upload->do_upload("file")) {
 					$this->form_validation->set_message("fileuploadans", $this->upload->display_errors());
@@ -125,7 +131,7 @@ class Assignment extends Admin_Controller {
 		
 		$new_file = "";
 		$original_file_name = '';
-		if($_FILES["file"]['name'] !="") {
+		if(isset($_FILES["file"]['name']) && $_FILES["file"]['name'] !="") {
 			$file_name = $_FILES["file"]['name'];
 			$original_file_name = $file_name;
 			$random = random19();
@@ -138,8 +144,6 @@ class Assignment extends Admin_Controller {
 				$config['allowed_types'] = "gif|jpg|png|jpeg|pdf|doc|xml|docx|GIF|JPG|PNG|JPEG|PDF|DOC|XML|DOCX|xls|xlsx|txt|ppt|csv";
 				$config['file_name'] = $new_file;
 				$config['max_size'] = '100024';
-				$config['max_width'] = '3000';
-				$config['max_height'] = '3000';
 				$this->load->library('upload', $config);
 				if(!$this->upload->do_upload("file")) {
 					$this->form_validation->set_message("fileupload", $this->upload->display_errors());
