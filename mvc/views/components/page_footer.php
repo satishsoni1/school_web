@@ -135,5 +135,40 @@
               }, 5000);
             });
         </script>
+
+        <?php
+        // Reports: no Section field. Every class here is a single section (Grade 1 A, Grade 1 B …),
+        // so the Section dropdown is hidden and the class's section is chosen automatically once
+        // the class is picked — the report runs exactly as if the user had selected it.
+        $sectionlessReports = array(
+            'studentreport', 'idcardreport', 'admitcardreport', 'routinereport', 'examschedulereport',
+            'attendancereport', 'terminalreport', 'meritlistreport', 'marksheetreport', 'certificatereport',
+            'leaveapplicationreport', 'duefeesreport', 'balancefeesreport',
+        );
+        if (in_array(strtolower((string) $this->uri->segment(1)), $sectionlessReports, true)) { ?>
+        <style>.ppg-auto-section { display: none !important; }</style>
+        <script type="text/javascript">
+            $(function () {
+                var $section = $('#sectionID');
+                if (!$section.length) { return; }
+                // Hide the whole field (label + select); !important beats the reports' own show().
+                $section.closest('.form-group').addClass('ppg-auto-section');
+
+                // Pick the class's (only) section whenever the list is (re)loaded for a class.
+                function pickSection() {
+                    var $first = $section.find('option').filter(function () {
+                        return this.value !== '' && this.value !== '0';
+                    }).first();
+                    if ($first.length && $section.val() !== $first.val()) {
+                        $section.val($first.val()).trigger('change');
+                    }
+                }
+                if (window.MutationObserver) {
+                    new MutationObserver(pickSection).observe($section[0], { childList: true });
+                }
+                pickSection();
+            });
+        </script>
+        <?php } ?>
     </body>
 </html>
