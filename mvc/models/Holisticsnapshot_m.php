@@ -138,6 +138,33 @@ class Holisticsnapshot_m extends MY_Model
     }
 
     /**
+     * Use the student's details for THAT school year: studentrelation has one row per student per
+     * year (class, roll, register no, section, group, optional subject), while the student master
+     * table only holds today's values. Everything studentrelation records is taken from it EXCEPT
+     * the name, which stays from the master record (srname holds the short/uncorrected name entered
+     * that year). Photo, DOB, parents, address and phone are not stored per year.
+     */
+    public static function apply_year_details($student)
+    {
+        $map = array(
+            'classesID'         => 'srclassesID',
+            'classes'           => 'srclasses',
+            'roll'              => 'srroll',
+            'registerNO'        => 'srregisterNO',
+            'sectionID'         => 'srsectionID',
+            'section'           => 'srsection',
+            'studentgroupID'    => 'srstudentgroupID',
+            'optionalsubjectID' => 'sroptionalsubjectID',
+        );
+        foreach ($map as $field => $yearField) {
+            if (isset($student->$yearField) && $student->$yearField !== '' && $student->$yearField !== null) {
+                $student->$field = $student->$yearField;
+            }
+        }
+        return $student;
+    }
+
+    /**
      * View variables for a report card built purely from a snapshot:
      * classesID, student, classes, section, schoolyear, student_photo_path, teacher_name, teacher_sign.
      * Returns null when there is no usable snapshot.
@@ -153,6 +180,7 @@ class Holisticsnapshot_m extends MY_Model
         }
         // The views build the photo URL with pdfimagelink(photo, folder).
         $student->photo = !empty($snapshot->photo) ? basename($snapshot->photo) : null;
+        self::apply_year_details($student);
 
         return array(
             'classesID'          => (int) $snapshot->classesID,

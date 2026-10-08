@@ -41,8 +41,8 @@ $templateFor = function ($classesID) use ($templates) {
         <tr>
             <td><?= $i; ?></td>
             <td><?= $student->name; ?></td>
-            <td><?= $student->roll; ?></td>
-            <td><?= $student->section; ?></td>
+            <td><?= $student->srroll; ?></td>
+            <td><?= $student->srsection; ?></td>
             <td>
                 <?php if ($hasReport) { ?>
                     <span class="label label-success">Saved</span>
