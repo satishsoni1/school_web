@@ -91,8 +91,10 @@ class Holisticsnapshot_m extends MY_Model
             return $snapshot;
         }
 
-        $classes    = $this->classes_m->get_single_classes(array('classesID' => $classesID));
-        $section    = $this->section_m->get_single_section(array('sectionID' => $student->srsectionID));
+        // Unscoped lookups: the scoped versions limit a student/parent login to this year's class
+        // (and a teacher to their own sections), which left last year's class blank.
+        $classes    = $this->classes_m->general_get_single_classes(array('classesID' => $classesID));
+        $section    = $this->section_m->general_get_single_section(array('sectionID' => $student->srsectionID));
         $schoolyear = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
         list($teacherSign, $teacherName) = $this->teacherclasses_m->get_single_teacher_name($classesID);
 
@@ -165,6 +167,33 @@ class Holisticsnapshot_m extends MY_Model
     }
 
     /**
+     * Snapshots built from the app before the unscoped lookups were used can lack the class/section
+     * row (blank class name). Fill the gap from the class/section tables — a class's name does not
+     * change by year — and save it so it happens once. Nothing else in the snapshot is touched.
+     */
+    private function repair_class_section($snapshot, $student)
+    {
+        $update = array();
+        if (empty($snapshot->classes_data)) {
+            $this->load->model('classes_m');
+            $classes = $this->classes_m->general_get_single_classes(array('classesID' => $snapshot->classesID));
+            if (customCompute($classes)) {
+                $snapshot->classes_data = $update['classes_data'] = json_encode($classes);
+            }
+        }
+        if (empty($snapshot->section_data) && !empty($student->srsectionID)) {
+            $this->load->model('section_m');
+            $section = $this->section_m->general_get_single_section(array('sectionID' => $student->srsectionID));
+            if (customCompute($section)) {
+                $snapshot->section_data = $update['section_data'] = json_encode($section);
+            }
+        }
+        if ($update) {
+            $this->db->where('id', $snapshot->id)->update($this->_table_name, $update);
+        }
+    }
+
+    /**
      * View variables for a report card built purely from a snapshot:
      * classesID, student, classes, section, schoolyear, student_photo_path, teacher_name, teacher_sign.
      * Returns null when there is no usable snapshot.
@@ -181,6 +210,7 @@ class Holisticsnapshot_m extends MY_Model
         // The views build the photo URL with pdfimagelink(photo, folder).
         $student->photo = !empty($snapshot->photo) ? basename($snapshot->photo) : null;
         self::apply_year_details($student);
+        $this->repair_class_section($snapshot, $student);
 
         return array(
             'classesID'          => (int) $snapshot->classesID,

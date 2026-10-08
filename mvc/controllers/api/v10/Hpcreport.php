@@ -55,8 +55,9 @@ class Hpcreport extends Api_Controller
                 'classesID'    => (int) $snapshot->classesID,
                 'name'         => isset($student->name) ? $student->name : '',
                 'roll'         => isset($student->roll) ? $student->roll : '',
-                'classes'      => isset($context['classes']->classes) ? $context['classes']->classes : '',
-                'section'      => isset($context['section']->section) ? $context['section']->section : '',
+                // Class/section for that year; fall back to the year's studentrelation values.
+                'classes'      => isset($context['classes']->classes) ? $context['classes']->classes : (isset($student->classes) ? $student->classes : ''),
+                'section'      => isset($context['section']->section) ? $context['section']->section : (isset($student->section) ? $student->section : ''),
                 'schoolyear'   => isset($context['schoolyear']->schoolyear) ? $context['schoolyear']->schoolyear : '',
                 'photo'        => pdfimagelink($student->photo, $context['student_photo_path']),
                 'generated_at' => $snapshot->updated_at,
