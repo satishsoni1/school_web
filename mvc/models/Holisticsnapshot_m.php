@@ -104,8 +104,15 @@ class Holisticsnapshot_m extends MY_Model
         if (!empty($student->photo) && $student->photo != 'default.png') {
             $photo = $this->copy_file('uploads/images/' . $student->photo, $dir, $studentID . '_photo_' . basename($student->photo));
         }
-        $teacherSign = $teacherSign ?: self::DEFAULT_SIGN;
-        $teacherSign = $this->copy_file($teacherSign, $dir, 'class' . $classesID . '_sign_' . basename($teacherSign)) ?: $teacherSign;
+        $yearTeachers = $this->year_teachers($schoolyearID, $classesID);
+        if ($yearTeachers) {
+            // That year's class teacher(s) from config/holistic_year_teachers.php — never today's master.
+            $teacherName = $yearTeachers['name'];
+            $teacherSign = $yearTeachers['sign'];
+        } else {
+            $teacherSign = $teacherSign ?: self::DEFAULT_SIGN;
+            $teacherSign = $this->copy_file($teacherSign, $dir, 'class' . $classesID . '_sign_' . basename($teacherSign)) ?: $teacherSign;
+        }
 
         // A replaced student photo is no longer referenced by this snapshot — remove the old copy.
         if (customCompute($snapshot) && !empty($snapshot->photo) && $snapshot->photo != $photo && strpos($snapshot->photo, $dir . '/') === 0) {
@@ -194,6 +201,61 @@ class Holisticsnapshot_m extends MY_Model
     }
 
     /**
+     * The class teacher(s) configured for a past year/class in config/holistic_year_teachers.php,
+     * as ['name' => "A, B", 'sign' => "copyA,copyB"] with each signature COPIED from the teacher
+     * master into that year's snapshot folder. Null when the year/class is not configured.
+     */
+    public function year_teachers($schoolyearID, $classesID)
+    {
+        $this->config->load('holistic_year_teachers', TRUE, TRUE);
+        $all = $this->config->item('holistic_year_teachers', 'holistic_year_teachers');
+        if (empty($all[$schoolyearID][$classesID])) {
+            return null;
+        }
+        $dir   = self::SNAPSHOT_DIR . (int) $schoolyearID;
+        $names = array();
+        $signs = array();
+        foreach ($all[$schoolyearID][$classesID] as $teacher) {
+            list($teacherID, $printName) = $teacher;
+            $names[] = $printName;
+            $master  = $this->db->get_where('teacher', array('teacherID' => $teacherID))->row();
+            $source  = ($master && $master->sign) ? $master->sign : self::DEFAULT_SIGN;
+            $copy    = $this->copy_file($source, $dir, 'teacher' . (int) $teacherID . '_sign_' . basename($source));
+            if ($copy) {
+                $signs[] = $copy;
+            }
+        }
+        return array(
+            'name' => implode(', ', $names),
+            'sign' => $signs ? implode(',', $signs) : self::DEFAULT_SIGN,
+        );
+    }
+
+    /**
+     * A past-year snapshot whose teacher differs from the configured class teacher(s) (e.g. it was
+     * built from today's master teacher) is corrected and saved, once.
+     */
+    private function repair_year_teachers($snapshot)
+    {
+        $this->config->load('holistic_year_teachers', TRUE, TRUE);
+        $all = $this->config->item('holistic_year_teachers', 'holistic_year_teachers');
+        if (empty($all[$snapshot->schoolyearID][$snapshot->classesID])) {
+            return;
+        }
+        $expected = implode(', ', array_column($all[$snapshot->schoolyearID][$snapshot->classesID], 1));
+        if ($snapshot->teacher_name === $expected) {
+            return;
+        }
+        $teachers = $this->year_teachers($snapshot->schoolyearID, $snapshot->classesID);
+        $snapshot->teacher_name = $teachers['name'];
+        $snapshot->teacher_sign = $teachers['sign'];
+        $this->db->where('id', $snapshot->id)->update($this->_table_name, array(
+            'teacher_name' => $teachers['name'],
+            'teacher_sign' => $teachers['sign'],
+        ));
+    }
+
+    /**
      * View variables for a report card built purely from a snapshot:
      * classesID, student, classes, section, schoolyear, student_photo_path, teacher_name, teacher_sign.
      * Returns null when there is no usable snapshot.
@@ -211,6 +273,7 @@ class Holisticsnapshot_m extends MY_Model
         $student->photo = !empty($snapshot->photo) ? basename($snapshot->photo) : null;
         self::apply_year_details($student);
         $this->repair_class_section($snapshot, $student);
+        $this->repair_year_teachers($snapshot);
 
         return array(
             'classesID'          => (int) $snapshot->classesID,
