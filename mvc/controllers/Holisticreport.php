@@ -67,6 +67,34 @@ class Holisticreport extends Admin_Controller
         exit;
     }
 
+    // -------------------------------------------------------------------------
+    // Past-year class teachers (names + frozen copy of their signatures)
+    // GET = preview, POST = apply. Admin only. Mapping: config/holistic_year_teachers.php
+    // -------------------------------------------------------------------------
+    public function year_teachers($schoolyearID = 0)
+    {
+        if ($this->session->userdata('usertypeID') != 1) {
+            $this->data['subview'] = 'error';
+            $this->load->view('_layout_main', $this->data);
+            return;
+        }
+        $this->config->load('holistic_year_teachers', TRUE);
+        $all = $this->config->item('holistic_year_teachers', 'holistic_year_teachers');
+        $all = is_array($all) ? $all : array();
+
+        $schoolyearID = (int) $schoolyearID ?: (int) key($all);
+        $mapping = isset($all[$schoolyearID]) ? $all[$schoolyearID] : array();
+        $apply = ($this->input->method() === 'post') && $mapping;
+
+        $this->data['plan']         = $this->holisticsnapshot_m->assign_year_teachers($schoolyearID, $mapping, $apply);
+        $this->data['applied']      = $apply;
+        $this->data['schoolyearID'] = $schoolyearID;
+        $this->data['schoolyear']   = $this->schoolyear_m->get_single_schoolyear(array('schoolyearID' => $schoolyearID));
+        $this->data['configured']   = array_keys($all);
+        $this->data['subview']      = 'report/holistic/year_teachers';
+        $this->load->view('_layout_main', $this->data);
+    }
+
     /** The school's running academic year (Settings), where reports are created/edited. */
     private function _runningYearID()
     {

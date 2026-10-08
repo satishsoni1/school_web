@@ -2391,7 +2391,8 @@ We show with placeholder variable $math_base for easy swap */
             <div class="signs">
       <div class="sig" style="text-align:center;">
         Class Teacher Signature
-        <div class="line"><img  style="width:50%; height:100%; object-fit:cover;"  src="<?= base_url($teacher_sign) ?>" /></div>
+        <?php $teacherSigns = array_filter(array_map('trim', explode(',', (string) $teacher_sign))); // one per class teacher ?>
+        <div class="line" style="display:flex; justify-content:center; gap:4%;"><?php foreach ($teacherSigns as $teacherSignPath) { ?><img style="width:<?= count($teacherSigns) > 1 ? 40 : 50 ?>%; height:100%; object-fit:contain;" src="<?= base_url($teacherSignPath) ?>" /><?php } ?></div>
         <div style="text-align:center; padding-top:0.8rem;"><?= isset($teacher_name) ? str_replace(',', '<br>', hpc_esc($teacher_name)) : ''; ?></div>
       </div>
       <div class="sig" style="text-align:center;">Parent/Guardian Signature

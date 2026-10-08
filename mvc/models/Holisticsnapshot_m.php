@@ -225,6 +225,88 @@ class Holisticsnapshot_m extends MY_Model
     }
 
     /**
+     * Put the given class teachers (names + a COPY of their signature from the teacher table) on
+     * every saved report of $schoolyearID, per class. Missing snapshots are created first. Because
+     * the names and copied files live in the snapshot, later teacher-master changes never alter
+     * these report cards.
+     *
+     * @param array $mapping [classesID => [[teacherID, name to print], ...]]
+     * @param bool  $apply   false = preview only (nothing written or copied)
+     * @return array per-class plan/result rows
+     */
+    public function assign_year_teachers($schoolyearID, array $mapping, $apply)
+    {
+        $this->load->model('classes_m');
+        $blankSign = is_file(FCPATH . self::DEFAULT_SIGN) ? md5_file(FCPATH . self::DEFAULT_SIGN) : null;
+        $dir       = self::SNAPSHOT_DIR . (int) $schoolyearID;
+        $result    = array();
+
+        foreach ($mapping as $classesID => $teachers) {
+            $class = $this->classes_m->general_get_single_classes(array('classesID' => $classesID));
+            $row = array(
+                'classesID' => $classesID,
+                'class'     => customCompute($class) ? $class->classes : ('Class ' . $classesID),
+                'teachers'  => array(),
+                'reports'   => 0,
+                'created'   => 0,
+                'updated'   => 0,
+            );
+
+            $names = array();
+            $signs = array();
+            foreach ($teachers as $teacher) {
+                list($teacherID, $printName) = $teacher;
+                $master = $this->db->get_where('teacher', array('teacherID' => $teacherID))->row();
+                $source = ($master && $master->sign) ? $master->sign : self::DEFAULT_SIGN;
+                $exists = is_file(FCPATH . $source);
+                $info = array(
+                    'teacherID' => $teacherID,
+                    'name'      => $printName,
+                    'master'    => $master ? $master->name : '(not found)',
+                    'source'    => $source,
+                    'missing'   => !$exists,
+                    'blank'     => $exists && $blankSign && md5_file(FCPATH . $source) === $blankSign,
+                    'copy'      => '',
+                );
+                if ($apply && $exists) {
+                    $info['copy'] = $this->copy_file($source, $dir, 'teacher' . (int) $teacherID . '_sign_' . basename($source)) ?: $source;
+                    $signs[] = $info['copy'];
+                } elseif ($exists) {
+                    $signs[] = $source;
+                }
+                $names[] = $printName;
+                $row['teachers'][] = $info;
+            }
+
+            $reports = $this->db->select('studentID')
+                ->where(array('schoolyearID' => $schoolyearID, 'classesID' => $classesID))
+                ->get('holisticprogress')->result();
+            $row['reports'] = count($reports);
+
+            if ($apply) {
+                foreach ($reports as $report) {
+                    $existing = $this->get_single_snapshot(array('studentID' => $report->studentID, 'schoolyearID' => $schoolyearID));
+                    $snapshot = $existing ?: $this->sync((int) $report->studentID, (int) $classesID, (int) $schoolyearID, false);
+                    if (!customCompute($snapshot)) {
+                        continue;
+                    }
+                    if (!$existing) {
+                        $row['created']++;
+                    }
+                    $this->update(array(
+                        'teacher_name' => implode(', ', $names),
+                        'teacher_sign' => implode(',', $signs) ?: self::DEFAULT_SIGN,
+                        'updated_at'   => date('Y-m-d H:i:s'),
+                    ), $snapshot->id);
+                    $row['updated']++;
+                }
+            }
+            $result[] = $row;
+        }
+        return $result;
+    }
+
+    /**
      * Copy a file (path relative to the web root) into the snapshot folder.
      * Returns the copy's path relative to the web root, the source path if the copy
      * could not be made, or null if the source does not exist.

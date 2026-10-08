@@ -1,7 +1,12 @@
 <div class="row">
     <div class="col-sm-12">
         <div class="box box-info">
-            <div class="box-header with-border"><h3 class="box-title">Holistic Report</h3></div>
+            <div class="box-header with-border">
+                <h3 class="box-title">Holistic Report</h3>
+                <?php if ($this->session->userdata('usertypeID') == 1) { ?>
+                    <a href="<?= base_url('holisticreport/year_teachers'); ?>" class="btn btn-default btn-sm pull-right"><i class="fa fa-pencil-square-o"></i> Past-year class teachers &amp; signatures</a>
+                <?php } ?>
+            </div>
             <div class="box-body">
                 <div class="row">
                     <div class="col-sm-3">
