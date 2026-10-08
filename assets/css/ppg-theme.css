@@ -64,7 +64,7 @@ body > .header .logo {
 }
 .sidebar .sidebar-menu > li > a,
 .skin-blue .sidebar-menu > li > a {
-  color: rgba(241, 245, 249, 0.85);
+  color: #fff !important;
   border-left: 3px solid transparent;
 }
 .sidebar .sidebar-menu > li > a:hover,
@@ -92,6 +92,7 @@ body > .header .logo {
 /* Each submenu *item* also carries its own separate light-gray background (#EDEFF4) —
    without this it sits as a mismatched gray block on top of the dark teal container above. */
 .sidebar .sidebar-menu .treeview-menu > li {
+  color: #fff !important;
   background-color: transparent !important;
 }
 .sidebar .sidebar-menu .treeview-menu > li > a {
