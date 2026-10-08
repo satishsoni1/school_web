@@ -28,6 +28,20 @@ class Hpcreport extends Api_Controller
             $studentIDs = array_column($this->db->select('studentID')->where('parentID', $loginuserID)->get('student')->result_array(), 'studentID');
         }
 
+        // Saved reports with no snapshot yet (e.g. last year's, saved before snapshots existed):
+        // create it once so the report can be listed and opened. Existing snapshots are never rebuilt here.
+        if ($studentIDs) {
+            $missing = $this->db->select('h.studentID, h.classesID, h.schoolyearID')
+                ->from('holisticprogress h')
+                ->join('holistic_report_snapshot s', 's.studentID = h.studentID AND s.schoolyearID = h.schoolyearID', 'LEFT')
+                ->where_in('h.studentID', $studentIDs)
+                ->where('s.id IS NULL', null, false)
+                ->get()->result();
+            foreach ($missing as $row) {
+                $this->holisticsnapshot_m->sync((int) $row->studentID, (int) $row->classesID, (int) $row->schoolyearID, false);
+            }
+        }
+
         $reports = [];
         foreach ($this->holisticsnapshot_m->get_snapshots_for_students($studentIDs) as $snapshot) {
             $context = $this->holisticsnapshot_m->report_context($snapshot);

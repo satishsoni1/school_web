@@ -4,6 +4,16 @@
             <div class="box-header with-border"><h3 class="box-title">Holistic Report</h3></div>
             <div class="box-body">
                 <div class="row">
+                    <div class="col-sm-3">
+                        <label>Academic Year</label>
+                        <select id="schoolyearID" class="form-control">
+                            <?php foreach ($schoolyears as $year) { ?>
+                                <option value="<?= $year->schoolyearID; ?>" <?= $year->schoolyearID == $runningYearID ? 'selected' : ''; ?>>
+                                    <?= $year->schoolyear; ?><?= $year->schoolyearID == $runningYearID ? ' (current)' : ''; ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </div>
                     <div class="col-sm-4">
                         <label>Class</label>
                         <select id="classesID" class="form-control">
@@ -28,9 +38,14 @@
 (function() {
     var base = "<?= base_url(); ?>";
 
+    $('#schoolyearID').on('change', function() {
+        if ($('#classesID').val() > 0) { $('#loadStudents').click(); }
+    });
+
     $('#loadStudents').on('click', function() {
         $.post(base + 'holisticreport/getStudentList', {
-            classesID: $('#classesID').val()
+            classesID: $('#classesID').val(),
+            schoolyearID: $('#schoolyearID').val()
         }, function(resp) {
             try {
                 var data = JSON.parse(resp);

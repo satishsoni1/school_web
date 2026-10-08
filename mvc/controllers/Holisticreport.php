@@ -29,7 +29,9 @@ class Holisticreport extends Admin_Controller
                 'assets/select2/select2.js',
             ),
         );
-        $this->data['classes'] = $this->classes_m->general_get_classes();
+        $this->data['classes']       = $this->classes_m->general_get_classes();
+        $this->data['schoolyears']   = $this->schoolyear_m->get_order_by_schoolyear();
+        $this->data['runningYearID'] = $this->_runningYearID();
         $this->data['subview'] = 'report/holistic/index';
         $this->load->view('_layout_main', $this->data);
     }
@@ -42,21 +44,33 @@ class Holisticreport extends Admin_Controller
         $retArray = array('status' => FALSE, 'render' => '');
         if ($_POST) {
             $classesID    = (int) $this->input->post('classesID');
-            $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+            $schoolyearID = (int) $this->input->post('schoolyearID') ?: $this->_runningYearID();
 
             if ($classesID > 0) {
-                $queryArray = array(
+                $this->data['students'] = $this->studentrelation_m->general_get_order_by_student(array(
                     'srschoolyearID' => $schoolyearID,
                     'srclassesID'    => $classesID,
-                );
-                $this->data['students']  = $this->studentrelation_m->general_get_order_by_student($queryArray);
-                $this->data['classesID'] = $classesID;
-                $retArray['render']      = $this->load->view('report/holistic/student_list', $this->data, TRUE);
-                $retArray['status']      = TRUE;
+                ));
+                // Students who already have a saved report for this year.
+                $saved = $this->db->select('studentID, updated_at')
+                    ->where(array('schoolyearID' => $schoolyearID, 'classesID' => $classesID))
+                    ->get('holisticprogress')->result();
+                $this->data['savedReports']  = array_column($saved, 'updated_at', 'studentID');
+                $this->data['classesID']     = $classesID;
+                $this->data['schoolyearID']  = $schoolyearID;
+                $this->data['isRunningYear'] = ($schoolyearID == $this->_runningYearID());
+                $retArray['render']          = $this->load->view('report/holistic/student_list', $this->data, TRUE);
+                $retArray['status']          = TRUE;
             }
         }
         echo json_encode($retArray);
         exit;
+    }
+
+    /** The school's running academic year (Settings), where reports are created/edited. */
+    private function _runningYearID()
+    {
+        return (int) $this->data['siteinfos']->school_year;
     }
 
     // -------------------------------------------------------------------------
@@ -123,7 +137,8 @@ class Holisticreport extends Admin_Controller
     {
         $studentID    = (int) $studentID;
         $classesID    = (int) $classesID;
-        $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+        // Reports are created/edited only for the running school year; past years are view-only.
+        $schoolyearID = $this->_runningYearID();
 
         $this->data['student'] = $this->studentrelation_m->get_single_student(array(
             'srstudentID'    => $studentID,
@@ -276,11 +291,12 @@ class Holisticreport extends Admin_Controller
     // -------------------------------------------------------------------------
     // GENERATE REPORT
     // -------------------------------------------------------------------------
-    public function generate_report_1($studentID, $classesID)
+    public function generate_report_1($studentID, $classesID, $schoolyearID = null)
     {
         $studentID    = (int) $studentID;
         $classesID    = (int) $classesID;
-        $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+        // Explicit year from the list (e.g. last year's report); else the admin's session year.
+        $schoolyearID = (int) $schoolyearID ?: (int) $this->session->userdata('defaultschoolyearID');
 
         // Student info, photo, class and teacher name/sign come from the report snapshot for
         // this school year (frozen once the year is over), not from today's master data.
@@ -429,7 +445,8 @@ class Holisticreport extends Admin_Controller
     {
         $studentID    = (int) $studentID;
         $classesID    = (int) $classesID;
-        $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+        // Reports are created/edited only for the running school year; past years are view-only.
+        $schoolyearID = $this->_runningYearID();
 
         $this->data['student'] = $this->studentrelation_m->get_single_student(array(
             'srstudentID'    => $studentID,
@@ -578,11 +595,12 @@ class Holisticreport extends Admin_Controller
         $this->data['subview'] = 'report/holistic/add_information_4';
         $this->load->view('_layout_main', $this->data);
     }
-    public function generate_report_4($studentID, $classesID)
+    public function generate_report_4($studentID, $classesID, $schoolyearID = null)
     {
         $studentID    = (int) $studentID;
         $classesID    = (int) $classesID;
-        $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+        // Explicit year from the list (e.g. last year's report); else the admin's session year.
+        $schoolyearID = (int) $schoolyearID ?: (int) $this->session->userdata('defaultschoolyearID');
 
         // Student info, photo, class and teacher name/sign come from the report snapshot for
         // this school year (frozen once the year is over), not from today's master data.
@@ -691,7 +709,8 @@ class Holisticreport extends Admin_Controller
     {
         $studentID    = (int) $studentID;
         $classesID    = (int) $classesID;
-        $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+        // Reports are created/edited only for the running school year; past years are view-only.
+        $schoolyearID = $this->_runningYearID();
 
         $this->data['student'] = $this->studentrelation_m->get_single_student(array(
             'srstudentID'    => $studentID,
@@ -840,11 +859,12 @@ class Holisticreport extends Admin_Controller
         $this->data['subview'] = 'report/holistic/add_information_5';
         $this->load->view('_layout_main', $this->data);
     }
-    public function generate_report_5($studentID, $classesID)
+    public function generate_report_5($studentID, $classesID, $schoolyearID = null)
     {
         $studentID    = (int) $studentID;
         $classesID    = (int) $classesID;
-        $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+        // Explicit year from the list (e.g. last year's report); else the admin's session year.
+        $schoolyearID = (int) $schoolyearID ?: (int) $this->session->userdata('defaultschoolyearID');
 
         // Student info, photo, class and teacher name/sign come from the report snapshot for
         // this school year (frozen once the year is over), not from today's master data.
@@ -949,11 +969,12 @@ class Holisticreport extends Admin_Controller
 
         $this->load->view('report/holistic/report_card_5', $this->data);
     }
-    public function generate_report_6($studentID, $classesID)
+    public function generate_report_6($studentID, $classesID, $schoolyearID = null)
     {
         $studentID    = (int) $studentID;
         $classesID    = (int) $classesID;
-        $schoolyearID = (int) $this->session->userdata('defaultschoolyearID');
+        // Explicit year from the list (e.g. last year's report); else the admin's session year.
+        $schoolyearID = (int) $schoolyearID ?: (int) $this->session->userdata('defaultschoolyearID');
 
         // Student info, photo, class and teacher name/sign come from the report snapshot for
         // this school year (frozen once the year is over), not from today's master data.
@@ -1058,8 +1079,8 @@ class Holisticreport extends Admin_Controller
 
         $this->load->view('report/holistic/report_card_6', $this->data);
     }
-    public function generate_report_3($studentID, $classesID)
+    public function generate_report_3($studentID, $classesID, $schoolyearID = null)
     {
-        $this->generate_report_1($studentID, $classesID);
+        $this->generate_report_1($studentID, $classesID, $schoolyearID);
     }
 }

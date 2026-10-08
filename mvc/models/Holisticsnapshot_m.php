@@ -80,7 +80,9 @@ class Holisticsnapshot_m extends MY_Model
             return $snapshot;
         }
 
-        $student = $this->studentrelation_m->get_single_student(array(
+        // Unscoped lookup of this exact student/year/class: the scoped get_single_student() limits
+        // a student login to this year's class, which would hide last year's report.
+        $student = $this->studentrelation_m->general_get_single_student(array(
             'srstudentID'    => $studentID,
             'srschoolyearID' => $schoolyearID,
             'srclassesID'    => $classesID,
