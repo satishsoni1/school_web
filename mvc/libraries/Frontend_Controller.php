@@ -64,19 +64,36 @@ class Frontend_Controller extends MY_Controller {
 
         /* Start All Data Call */
         $this->data['events'] = $this->event_m->get_order_by_event(array('schoolyearID' => $schoolyearID));
-        $this->data['teachers'] = $this->teacher_m->get_teacher();
+        // Only active teachers appear on the public website.
+        $this->data['teachers'] = $this->teacher_m->general_get_order_by_teacher(array('active' => 1));
         $this->data['notices'] = $this->notice_m->get_order_by_notice(array('schoolyearID' => $schoolyearID));
         // Public "Staff" page directory — independent of the real teacher table,
         // so it can carry a photo, custom order, and non-teaching staff. Grouped
         // here so templates can render the two separately-headed sections.
+        // The teaching section lists every active teacher from the teacher table, followed by
+        // any manually added teaching staff not already in it (matched by name).
         $websiteStaffAll = $this->website_staff_m->get_order_by_website_staff(array('status' => 1));
         $this->data['websiteStaffTeaching'] = [];
         $this->data['websiteStaffNonTeaching'] = [];
+        $teacherNames = [];
+        if (customCompute($this->data['teachers'])) {
+            foreach ($this->data['teachers'] as $teacher) {
+                $teacherNames[] = strtolower(trim($teacher->name));
+                $this->data['websiteStaffTeaching'][] = (object) [
+                    'name'        => $teacher->name,
+                    'designation' => $teacher->designation,
+                    'email'       => '',
+                    'phone'       => '',
+                    'photo_url'   => imagelink($teacher->photo),
+                ];
+            }
+        }
         if (customCompute($websiteStaffAll)) {
             foreach ($websiteStaffAll as $staffMember) {
+                $staffMember->photo_url = imagelink($staffMember->photo, 'uploads/gallery');
                 if ($staffMember->group_type === 'non_teaching') {
                     $this->data['websiteStaffNonTeaching'][] = $staffMember;
-                } else {
+                } elseif (!in_array(strtolower(trim($staffMember->name)), $teacherNames)) {
                     $this->data['websiteStaffTeaching'][] = $staffMember;
                 }
             }

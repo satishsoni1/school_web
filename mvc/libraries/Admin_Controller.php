@@ -177,7 +177,7 @@ class Admin_Controller extends MY_Controller {
         $sessionPermission     = $this->session->userdata('master_permission_set');
         $allMenus              = json_decode(json_encode(pluck($this->menu_m->get_order_by_menu([ 'status' => 1 ]), 'obj', 'menuID')), true);
 
-        // Teachers: no Parents, Exam, Message, Leave Application or Student Group on the web panel.
+        // Teachers: no Parents, Exam, Message, Student Group or leave setup on the web panel (leave approval stays).
         if ( (int) $this->session->userdata('usertypeID') == 2 ) {
             $blockedModules = $this->_teacherBlockedModules($allMenus);
             if ( in_array($module, $blockedModules) ) {
@@ -187,6 +187,8 @@ class Admin_Controller extends MY_Controller {
             foreach ( $blockedModules as $blockedModule ) {
                 $sessionPermission[ $blockedModule ] = 'no';
             }
+            // Teachers approve/reject the leave requests students and parents send from the app.
+            $sessionPermission['leaveapplication'] = 'yes';
             $this->session->set_userdata([ 'master_permission_set' => $sessionPermission ]);
         }
 
@@ -671,7 +673,8 @@ class Admin_Controller extends MY_Controller {
         return $bloodgroup;
     }
 
-    // Menu links hidden from teachers: single items plus every item inside the Exam and Leave Application groups.
+    // Menu links hidden from teachers: single items plus every item inside the Exam and Leave Application
+    // groups, except the Leave Application approval page itself.
     private function _teacherBlockedModules( $menus )
     {
         $blocked      = [ 'parents', 'conversation', 'studentgroup' ];
@@ -682,7 +685,7 @@ class Admin_Controller extends MY_Controller {
             }
         }
         foreach ( $menus as $menu ) {
-            if ( in_array($menu['parentID'], $groupIDs) && $menu['link'] != '#' ) {
+            if ( in_array($menu['parentID'], $groupIDs) && !in_array($menu['link'], [ '#', 'leaveapplication' ]) ) {
                 $blocked[] = $menu['link'];
             }
         }

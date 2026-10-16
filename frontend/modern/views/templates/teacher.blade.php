@@ -44,7 +44,7 @@
                 <div class="pg-grid pg-grid--4">
                     @foreach($websiteStaffTeaching as $staffMember)
                         <div class="pg-card pg-staff-card">
-                            <div class="pg-staff-photo"><img src="{{ imagelink($staffMember->photo, 'uploads/gallery') }}" alt=""></div>
+                            <div class="pg-staff-photo"><img src="{{ $staffMember->photo_url }}" alt=""></div>
                             <h4>{{ $staffMember->name }}</h4>
                             <div class="pg-staff-role">{{ $staffMember->designation }}</div>
                             <div class="pg-staff-meta">
@@ -68,7 +68,7 @@
                 <div class="pg-grid pg-grid--4">
                     @foreach($websiteStaffNonTeaching as $staffMember)
                         <div class="pg-card pg-staff-card">
-                            <div class="pg-staff-photo"><img src="{{ imagelink($staffMember->photo, 'uploads/gallery') }}" alt=""></div>
+                            <div class="pg-staff-photo"><img src="{{ $staffMember->photo_url }}" alt=""></div>
                             <h4>{{ $staffMember->name }}</h4>
                             <div class="pg-staff-role">{{ $staffMember->designation }}</div>
                             <div class="pg-staff-meta">
