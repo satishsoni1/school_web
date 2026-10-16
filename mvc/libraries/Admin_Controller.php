@@ -91,6 +91,12 @@ class Admin_Controller extends MY_Controller {
         ];
 
         if ( in_array(uri_string(), $exceptionUris) == false ) {
+            // Students and parents are app-only; end any web session they still hold.
+            if ( $this->signin_m->loggedin() && in_array((int) $this->session->userdata('usertypeID'), [ 3, 4 ]) ) {
+                $this->signin_m->signout();
+                return base_url("signin/index");
+            }
+
             if ( $this->signin_m->loggedin() == false ) {
                 if ( $siteInfo->frontendorbackend === 'YES' || $siteInfo->frontendorbackend == 1 ) {
                     $this->load->model('fmenu_m');
@@ -169,8 +175,22 @@ class Admin_Controller extends MY_Controller {
         }
 
         $sessionPermission     = $this->session->userdata('master_permission_set');
-        $dbMenus               = $this->menuTree(json_decode(json_encode(pluck($this->menu_m->get_order_by_menu([ 'status' => 1 ]),
-            'obj', 'menuID')), true), $sessionPermission);
+        $allMenus              = json_decode(json_encode(pluck($this->menu_m->get_order_by_menu([ 'status' => 1 ]), 'obj', 'menuID')), true);
+
+        // Teachers: no Parents, Exam, Message, Leave Application or Student Group on the web panel.
+        if ( (int) $this->session->userdata('usertypeID') == 2 ) {
+            $blockedModules = $this->_teacherBlockedModules($allMenus);
+            if ( in_array($module, $blockedModules) ) {
+                $permission = $module;
+                $sessionPermission[ $module ] = 'no';
+            }
+            foreach ( $blockedModules as $blockedModule ) {
+                $sessionPermission[ $blockedModule ] = 'no';
+            }
+            $this->session->set_userdata([ 'master_permission_set' => $sessionPermission ]);
+        }
+
+        $dbMenus               = $this->menuTree($allMenus, $sessionPermission);
         $this->data["dbMenus"] = $dbMenus;
 
         if ( ( isset($sessionPermission[ $permission ]) && $sessionPermission[ $permission ] == "no" ) ) {
@@ -649,6 +669,24 @@ class Admin_Controller extends MY_Controller {
             'AB-' => 'AB-'
         );
         return $bloodgroup;
+    }
+
+    // Menu links hidden from teachers: single items plus every item inside the Exam and Leave Application groups.
+    private function _teacherBlockedModules( $menus )
+    {
+        $blocked      = [ 'parents', 'conversation', 'studentgroup' ];
+        $groupIDs     = [];
+        foreach ( $menus as $menuID => $menu ) {
+            if ( $menu['link'] == '#' && in_array($menu['menuName'], [ 'main_exam', 'main_leaveapplication' ]) ) {
+                $groupIDs[] = $menuID;
+            }
+        }
+        foreach ( $menus as $menu ) {
+            if ( in_array($menu['parentID'], $groupIDs) && $menu['link'] != '#' ) {
+                $blocked[] = $menu['link'];
+            }
+        }
+        return $blocked;
     }
 
     public function menuTree($dataset, $sessionPermission) {

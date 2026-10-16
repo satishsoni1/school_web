@@ -27,6 +27,14 @@ class Signin extends REST_Controller
     	$password 	= inputCall('password');
     	if ($username && $password) {
     		$userInfo = $this->userInfo(inputCall());
+    		if(is_array($userInfo) && (int) $userInfo['usertypeID'] == 2) {
+    			// Teachers may only sign in through the website.
+    			$this->session->sess_destroy();
+    			$this->response([
+                	'status' 	=> false,
+	                'message' 	=> 'Teachers can sign in only from the website'
+	            ], REST_Controller::HTTP_UNAUTHORIZED);
+    		}
     		if(is_array($userInfo)) {
                 $tokenArray['iat']   	= time();
                 $tokenArray['userdata']	= (array) $userInfo;

@@ -521,6 +521,17 @@ class Invoice extends Api_Controller
             }
         }
 
+        // The app shows pending = totalamount − totalpayment, so send totalamount net of
+        // discount and waiver (gross kept in grossamount). Fixes the app without an update.
+        if(isset($retArray['totalamount'])) {
+            $retArray['grossamount'] = $retArray['totalamount'];
+            foreach ($retArray['totalamount'] as $maininvoiceID => $gross) {
+                $discount = isset($retArray['totaldiscount'][$maininvoiceID]) ? $retArray['totaldiscount'][$maininvoiceID] : 0;
+                $weaver   = isset($retArray['totalweaver'][$maininvoiceID]) ? $retArray['totalweaver'][$maininvoiceID] : 0;
+                $retArray['totalamount'][$maininvoiceID] = $gross - $discount - $weaver;
+            }
+        }
+
         return $retArray;
     }
 
@@ -599,6 +610,10 @@ class Invoice extends Api_Controller
                 }
             }
         }
+
+        // App shows totalamount as "Total Amount": send it net of discount (waiver is listed separately).
+        $retArray['grossamount'] = $retArray['totalamount'];
+        $retArray['totalamount'] = $retArray['grandtotal'];
 
         return $retArray;
     }

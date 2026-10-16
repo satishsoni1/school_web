@@ -223,7 +223,10 @@ class Signin extends Admin_Controller {
                 if ( customCompute($user) ) {
                     $userType = $this->usertype_m->get_single_usertype([ 'usertypeID' => $user->usertypeID ]);
                     if ( customCompute($userType) ) {
-                        if ( $user->active ) {
+                        if ( in_array((int) $user->usertypeID, [ 3, 4 ]) ) {
+                            // Students and parents may only sign in through the mobile app.
+                            $returnArray = [ 'return' => false, 'message' => 'Students and parents can sign in only from the mobile app' ];
+                        } elseif ( $user->active ) {
                             $this->_loginLog($user->usertypeID, $userID);
                             $session = [
                                 "loginuserID"         => $userID,

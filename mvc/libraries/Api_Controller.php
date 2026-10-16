@@ -46,10 +46,19 @@ class Api_Controller extends REST_Controller
         $this->load->model('permission_m');
 
 
-        if(is_array($this->tokeChecking()) && !isset($this->tokeChecking()['userdata'])) {
+        $tokenDecode = $this->tokeChecking();
+        if(is_array($tokenDecode) && !isset($tokenDecode['userdata'])) {
             $this->response([
                 'status'  => false,
                 'message' => 'Invalid token'
+            ], self::HTTP_UNAUTHORIZED);
+        }
+
+        // Teachers are web-only; reject app tokens issued to them.
+        if(isset($tokenDecode['userdata']->usertypeID) && (int) $tokenDecode['userdata']->usertypeID == 2) {
+            $this->response([
+                'status'  => false,
+                'message' => 'Teachers can sign in only from the website'
             ], self::HTTP_UNAUTHORIZED);
         }
 
