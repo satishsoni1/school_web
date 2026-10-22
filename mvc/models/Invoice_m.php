@@ -131,7 +131,11 @@ class Invoice_m extends MY_Model {
 		$this->db->from('invoice');
 		$this->db->where('invoice.schoolyearID',$queryArray['schoolyearID']);
 
-		if((isset($queryArray['classesID']) && $queryArray['classesID'] != 0) || (isset($queryArray['sectionID']) && $queryArray['sectionID'] != 0) || (isset($queryArray['studentID']) && $queryArray['studentID'] != 0)) {
+		// The report's own students, whatever class each invoice was raised under
+		// (students who changed class keep invoices carrying their old classesID).
+		if(isset($queryArray['studentIDs'])) {
+			$this->db->where_in('invoice.studentID', $queryArray['studentIDs'] ? $queryArray['studentIDs'] : array(0));
+		} elseif((isset($queryArray['classesID']) && $queryArray['classesID'] != 0) || (isset($queryArray['sectionID']) && $queryArray['sectionID'] != 0) || (isset($queryArray['studentID']) && $queryArray['studentID'] != 0)) {
 			
 			if(isset($queryArray['classesID']) && $queryArray['classesID'] != 0) {
 				$this->db->where('invoice.classesID', $queryArray['classesID']);

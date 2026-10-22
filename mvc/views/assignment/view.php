@@ -46,7 +46,6 @@
 	                            <th><?=$this->lang->line('assignment_photo')?></th>
 	                            <th><?=$this->lang->line('assignment_student')?></th>
 	                            <th><?=$this->lang->line('assignment_roll')?></th>
-	                            <th><?=$this->lang->line('assignment_section')?></th>
 	                            <th><?=$this->lang->line('assignment_submission')?></th>
 	                            <th><?=$this->lang->line('action')?></th>
 	                        </tr>
@@ -65,9 +64,6 @@
 	                                </td>
 	                                <td data-title="<?=$this->lang->line('assignment_roll')?>">
 	                                    <?=$assignmentanswer->srroll?>
-	                                </td>
-	                                <td data-title="<?=$this->lang->line('assignment_section')?>">
-	                                    <?=$assignmentanswer->section?>
 	                                </td>
 	                                <td data-title="<?=$this->lang->line('assignment_submission')?>">
 	                                    <?=date('d M Y', strtotime($assignmentanswer->answerdate))?>

@@ -9,7 +9,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  *
  * Rows in periodic_test_schedule / periodic_test_syllabus are keyed by GRADE (1-10) and EXAM
  * ('PT-1', 'Half Yearly', 'PT-2', 'Annual'); every section of a grade (Grade 1 A/B/C) shares them.
- * The grade is read from the class name ("Grade 1 A" -> 1). Nursery/Prep classes have no grade.
+ * The grade is read from the class name ("Grade 1 A" -> 1); Nursery / Prep 1 / Prep 2 use 101 / 102 / 103.
  * Until db_migration_exam_portion.sql adds the `grade`/`exam` columns, the legacy `classesID`
  * column (which already held the grade number) is used and every row counts as PT-1.
  */
@@ -21,6 +21,7 @@ class Periodictest extends Api_Controller
     {
         parent::__construct();
         $this->load->database();
+        $this->load->model('periodictest_m');
     }
 
     /**
@@ -62,7 +63,7 @@ class Periodictest extends Api_Controller
         foreach ($rows as &$row) {
             $row['exam']       = isset($row['exam']) && $row['exam'] !== '' ? $row['exam'] : 'PT-1';
             $row['grade']      = $grade;
-            $row['class_name'] = 'Grade ' . $grade;
+            $row['class_name'] = Periodictest_m::label($grade);
         }
         unset($row);
         // Keep the original order within an exam; exams in calendar order.
@@ -101,9 +102,9 @@ class Periodictest extends Api_Controller
         return $student ? (int) $student->classesID : 0;
     }
 
-    /** "Grade 1 A" -> 1, "Grade 10" -> 10; null for Nursery / Prep / other classes. */
+    /** "Grade 1 A" -> 1, "PREP 1 A" -> 102, "NURSERY" -> 101; null for other classes. */
     private function gradeOf($className)
     {
-        return preg_match('/grade\s*-?\s*(\d+)/i', (string) $className, $m) ? (int) $m[1] : null;
+        return Periodictest_m::grade_of_class($className);
     }
 }

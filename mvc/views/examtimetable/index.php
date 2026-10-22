@@ -28,7 +28,7 @@
                 <select class="form-control" name="grade">
                     <option value="">All grades</option>
                     <?php foreach ($grades as $g) { ?>
-                        <option value="<?=$g?>" <?=$filter['grade'] === $g ? 'selected' : ''?>>Grade <?=$g?></option>
+                        <option value="<?=$g?>" <?=$filter['grade'] === $g ? 'selected' : ''?>><?=Periodictest_m::label($g)?></option>
                     <?php } ?>
                 </select>
             </div>

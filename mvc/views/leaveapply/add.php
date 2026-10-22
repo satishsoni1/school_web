@@ -75,7 +75,7 @@
                                 $categories[0] = $this->lang->line('leaveapply_select_category');
                                 if(customCompute($leavecategories)) {
                                     foreach ($leavecategories as $category) {
-                                        $categories[$category->leavecategoryID] = $category->leavecategory." (". $category->leaveassignday .")";
+                                        $categories[$category->leavecategoryID] = $category->leavecategory.(empty($category->unlimited) ? " (". $category->leaveassignday .")" : "");
                                     }
                                 }
                                 echo form_dropdown("leavecategoryID", $categories, set_value("leavecategoryID"), "id='leavecategoryID' class='form-control select2'");

@@ -42,10 +42,10 @@
                         <label for="description" class="col-sm-2 control-label">
                             <?=$this->lang->line("syllabus_description")?> <span class="text-red">*</span>
                         </label>
-                        <div class="col-sm-6">
-                            <textarea class="form-control" style="resize:none;" id="description" name="description"><?=set_value('description', $syllabus->description)?></textarea>
+                        <div class="col-sm-8">
+                            <textarea class="form-control" rows="10" style="resize:vertical; min-height:200px;" id="description" name="description"><?=set_value('description', $syllabus->description)?></textarea>
                         </div>
-                        <span class="col-sm-4 control-label">
+                        <span class="col-sm-2 control-label">
                             <?php echo form_error('description'); ?>
                         </span>
                     </div>

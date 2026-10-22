@@ -695,7 +695,7 @@ class Leaveapply extends Admin_Controller
                     if(customCompute($leaveassign)) {
                         $this->data['leaveapply']->leaveavabledays = ($leaveassign->leaveassignday - $availableleavedays);
                     } else {
-                        $this->data['leaveapply']->leaveavabledays = $this->lang->line('leaveapply_deleted');
+                        $this->data['leaveapply']->leaveavabledays = ($this->session->userdata('usertypeID') == 2) ? 'No limit' : $this->lang->line('leaveapply_deleted');
                     }
 
                     $this->data['applicant']= getObjectByUserTypeIDAndUserID($this->data['leaveapply']->create_usertypeID, $this->data['leaveapply']->create_userID, $schoolyearID);
@@ -746,7 +746,7 @@ class Leaveapply extends Admin_Controller
                         if(customCompute($leaveassign)) {
                             $this->data['leaveapply']->leaveavabledays = ($leaveassign->leaveassignday - $availableleavedays);
                         } else {
-                            $this->data['leaveapply']->leaveavabledays = $this->lang->line('leaveapply_deleted');
+                            $this->data['leaveapply']->leaveavabledays = ($this->session->userdata('usertypeID') == 2) ? 'No limit' : $this->lang->line('leaveapply_deleted');
                         }
 
 
@@ -842,7 +842,7 @@ class Leaveapply extends Admin_Controller
                                 if(customCompute($leaveassign)) {
                                     $this->data['leaveapply']->leaveavabledays = ($leaveassign->leaveassignday - $availableleavedays);
                                 } else {
-                                    $this->data['leaveapply']->leaveavabledays = $this->lang->line('leaveapply_deleted');
+                                    $this->data['leaveapply']->leaveavabledays = ($this->session->userdata('usertypeID') == 2) ? 'No limit' : $this->lang->line('leaveapply_deleted');
                                 }
 
                                 $this->data['applicant']= getObjectByUserTypeIDAndUserID($this->data['leaveapply']->create_usertypeID, $this->data['leaveapply']->create_userID, $schoolyearID);

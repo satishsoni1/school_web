@@ -55,7 +55,6 @@
                                                 <th class="col-sm-2"><?=$this->lang->line('attendance_photo')?></th>
                                                 <th class="col-sm-2"><?=$this->lang->line('attendance_name')?></th>
                                                 <th class="col-sm-2"><?=$this->lang->line('attendance_roll')?></th>
-                                                <th class="col-sm-2"><?=$this->lang->line('attendance_email')?></th>
                                                 <?php if(permissionChecker('sattendance_view')) { ?>
                                                 <th class="col-sm-2"><?=$this->lang->line('action')?></th>
                                                 <?php } ?>
@@ -75,10 +74,6 @@
                                                     </td>
                                                     <td data-title="<?=$this->lang->line('attendance_roll')?>">
                                                         <?php echo $student->srroll; ?>
-                                                    </td>
-                                                    
-                                                    <td data-title="<?=$this->lang->line('attendance_email')?>">
-                                                        <?php echo $student->email; ?>
                                                     </td>
                                                     <?php if(permissionChecker('sattendance_view')) { ?>
                                                     <td data-title="<?=$this->lang->line('action')?>">
@@ -109,7 +104,6 @@
                                                 <th class="col-sm-2"><?=$this->lang->line('attendance_photo')?></th>
                                                 <th class="col-sm-2"><?=$this->lang->line('attendance_name')?></th>
                                                 <th class="col-sm-2"><?=$this->lang->line('attendance_roll')?></th>
-                                                <th class="col-sm-2"><?=$this->lang->line('attendance_email')?></th>
                                                 <?php if(permissionChecker('sattendance_view')) { ?>
                                                 <th class="col-sm-2"><?=$this->lang->line('action')?></th>
                                                 <?php } ?>
@@ -129,9 +123,6 @@
                                                     </td>
                                                     <td data-title="<?=$this->lang->line('attendance_roll')?>">
                                                         <?php echo $student->srroll; ?>
-                                                    </td>
-                                                    <td data-title="<?=$this->lang->line('attendance_email')?>">
-                                                        <?php echo $student->email; ?>
                                                     </td>
                                                     <?php if(permissionChecker('sattendance_view')) { ?>
                                                     <td data-title="<?=$this->lang->line('action')?>">

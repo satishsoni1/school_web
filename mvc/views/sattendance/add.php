@@ -101,7 +101,6 @@
                                 <th style="width: 70px; text-align: center; padding: 12px;"><?=$this->lang->line('slno')?></th>
                                 <th style="width: 90px; text-align: center; padding: 12px;"><?=$this->lang->line('attendance_photo')?></th>
                                 <th style="padding: 12px;"><?=$this->lang->line('attendance_name')?></th>
-                                <th style="padding: 12px;"><?=$this->lang->line('attendance_email')?></th>
                                 <th style="width: 100px; text-align: center; padding: 12px;"><?=$this->lang->line('attendance_roll')?></th>
                                 <th style="width: 280px; text-align: center; padding: 12px;"><?=$this->lang->line('attendance_attendance')?></th>
                             </tr>
@@ -124,12 +123,16 @@
                                             </div>
                                         <?php } ?>
                                     </td>
-                                    <td style="vertical-align: middle; color: #64748b;" data-title="<?=$this->lang->line('attendance_email')?>"><?=$student->email?></td>
                                     <td style="text-align: center; vertical-align: middle; font-weight: 600;" data-title="<?=$this->lang->line('attendance_roll')?>"><span class="badge" style="background: #64748b; padding: 5px 10px; border-radius: 4px;"><?=$student->srroll?></span></td>
                                     <td style="text-align: center; vertical-align: middle;" class="studentID" data-studentid="<?=$student->studentID?>" data-title="<?=$this->lang->line('attendance_attendance')?>">
                                         <?php
                                             $aday = "a".abs($day);
-                                            if(isset($attendances[$student->studentID])) {
+                                            // Attendance counts from the date of admission: nothing to mark before it.
+                                            $notAdmitted = !empty($student->admission_date) && $student->admission_date != '0000-00-00'
+                                                && strtotime($student->admission_date) > strtotime($date);
+                                            if($notAdmitted) {
+                                                echo '<span class="label label-default" style="font-size: 12px;">Not admitted yet (admitted '.date('d M Y', strtotime($student->admission_date)).')</span>';
+                                            } elseif(isset($attendances[$student->studentID])) {
                                                 $isValidRow = false;
                                                 if($setting->attendance == "subject") {
                                                     if($monthyear == $attendances[$student->studentID]->monthyear && $attendances[$student->studentID]->studentID == $student->srstudentID && $attendances[$student->studentID]->classesID == $student->srclassesID && $attendances[$student->studentID]->subjectID == $subjectID) {

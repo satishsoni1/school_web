@@ -47,10 +47,10 @@ $back = (string) $this->input->get('back');
                             <select class="form-control" name="grade" required>
                                 <option value="">Select grade</option>
                                 <?php foreach ($grades as $g) { ?>
-                                    <option value="<?=$g?>" <?=(int) $val('grade') === $g ? 'selected' : ''?>>Grade <?=$g?></option>
+                                    <option value="<?=$g?>" <?=(int) $val('grade') === $g ? 'selected' : ''?>><?=Periodictest_m::label($g)?></option>
                                 <?php } ?>
                             </select>
-                            <p class="help-block">Applies to every section of the grade (A/B/C).</p>
+                            <p class="help-block">Applies to every section of the grade / Pre-Primary class (A/B/C).</p>
                         </div>
                     </div>
 

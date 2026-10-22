@@ -12,6 +12,16 @@ class Leavecategory_m extends MY_Model {
     }
 
     public function get_join_leavecategory_and_leaveassign($userTypeID, $schoolyearID) {
+        // Teachers apply to the office for any leave type and any number of days; the approver decides.
+        if((int) $userTypeID == 2) {
+            $categories = $this->db->order_by('leavecategoryID', 'ASC')->get('leavecategory')->result();
+            foreach($categories as $category) {
+                $category->leaveassignday = NULL;
+                $category->unlimited      = TRUE;
+            }
+            return $categories;
+        }
+
         $this->db->select('*');
         $this->db->from('leaveassign');
         $this->db->join('usertype', 'leaveassign.usertypeID = usertype.usertypeID', 'LEFT');

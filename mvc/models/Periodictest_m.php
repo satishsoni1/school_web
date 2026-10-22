@@ -12,7 +12,32 @@ class Periodictest_m extends CI_Model
     const SYLLABUS = 'periodic_test_syllabus';
 
     public static $exams  = array('PT-1', 'Half Yearly', 'PT-2', 'Annual');
-    public static $grades = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    // Grades 1-10, then Pre-Primary stored as 101-103 (no clash with grade numbers; see label()).
+    public static $grades = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 101, 102, 103);
+    public static $prePrimary = array(101 => 'Nursery', 102 => 'Prep 1', 103 => 'Prep 2');
+
+    /** 3 -> "Grade 3", 102 -> "Prep 1". */
+    public static function label($grade)
+    {
+        $grade = (int) $grade;
+        return isset(self::$prePrimary[$grade]) ? self::$prePrimary[$grade] : 'Grade ' . $grade;
+    }
+
+    /** Class name -> grade code: "Grade 1 A" -> 1, "PREP 2 B" -> 103, "NURSERY" -> 101; null otherwise. */
+    public static function grade_of_class($className)
+    {
+        $className = (string) $className;
+        if (preg_match('/grade\s*-?\s*(\d+)/i', $className, $m)) {
+            return (int) $m[1];
+        }
+        if (preg_match('/prep\s*-?\s*([12])/i', $className, $m)) {
+            return 101 + (int) $m[1];
+        }
+        if (preg_match('/nursery/i', $className)) {
+            return 101;
+        }
+        return null;
+    }
 
     /** True once the grade/exam columns exist (db_migration_exam_portion.sql). */
     public function has_exam_columns($table)
@@ -73,7 +98,7 @@ class Periodictest_m extends CI_Model
         foreach ($rows as $row) {
             $row->grade      = isset($row->grade) && $row->grade ? (int) $row->grade : (int) $row->classesID;
             $row->exam       = isset($row->exam) && $row->exam !== '' ? $row->exam : 'PT-1';
-            $row->class_name = 'Grade ' . $row->grade;
+            $row->class_name = self::label($row->grade);
         }
         return $rows;
     }

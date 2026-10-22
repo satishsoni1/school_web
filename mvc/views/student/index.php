@@ -45,9 +45,6 @@
                     <div class="nav-tabs-custom">
                         <ul class="nav nav-tabs">
                             <li class="active"><a data-toggle="tab" href="#all" aria-expanded="true"><?=$this->lang->line("student_all_students")?></a></li>
-                            <?php foreach ($sections as $key => $section) {
-                                echo '<li class=""><a data-toggle="tab" href="#tab'.$section->classesID.$section->sectionID .'" aria-expanded="false">'. $this->lang->line("student_section")." ".$section->section. " ( ". $section->category." )".'</a></li>';
-                            } ?>
                         </ul>
 
 
@@ -66,7 +63,6 @@
                                                 <th class="col-sm-1"><?=$this->lang->line('student_registerNO')?></th>
                                                 <?php if(customCompute($sections)) { } else { ?>
                                                 <th class="col-sm-1"><?=$this->lang->line('student_classes')?></th>
-                                                <th class="col-sm-1"><?=$this->lang->line('student_section')?></th>
                                                 <?php } ?>
                                                 <th class="col-sm-1"><?=$this->lang->line('student_phone')?></th>
                                                 <th class="col-sm-1">Password</th>
@@ -101,10 +97,6 @@
                                                         <td data-title="<?=$this->lang->line('student_classes')?>">
                                                             <?php echo $student->srclasses; ?>
                                                         </td>
-                                                        <td data-title="<?=$this->lang->line('student_section')?>">
-                                                            <?php echo $student->srsection; ?>
-                                                        </td>
-
                                                     <?php } ?>
                                                     <td data-title="<?=$this->lang->line('student_phone')?>">
                                                         <?php echo $student->phone; ?>
@@ -142,59 +134,6 @@
 
                             </div>
 
-                            <?php foreach ($sections as $key => $section) { ?>
-                                    <div id="tab<?=$section->classesID.$section->sectionID?>" class="tab-pane">
-                                        <div id="hide-table">
-                                            <table class="table table-striped table-bordered table-hover dataTable no-footer">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="col-sm-2"><?=$this->lang->line('slno')?></th>
-                                                        <!-- <th class="col-sm-2"><?=$this->lang->line('student_photo')?></th> -->
-                                                        <th class="col-sm-2"><?=$this->lang->line('student_name')?></th>
-                                                        <th class="col-sm-2"><?=$this->lang->line('student_roll')?></th>
-                                                        <th class="col-sm-2"><?=$this->lang->line('student_email')?></th>
-                                                        <?php if(permissionChecker('student_edit') || permissionChecker('student_delete') || permissionChecker('student_view')) { ?>
-                                                            <th class="col-sm-2"><?=$this->lang->line('action')?></th>
-                                                        <?php } ?>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php if(customCompute($allsection[$section->sectionID])) { $i = 1; foreach($allsection[$section->sectionID] as $student) { if($section->sectionID === $student->srsectionID) { ?>
-                                                        <tr>
-                                                            <td data-title="<?=$this->lang->line('slno')?>">
-                                                                <?php echo $i; ?>
-                                                            </td>
-
-                                                            <!-- <td data-title="<?=$this->lang->line('student_photo')?>">
-                                                                <?=profileimage($student->photo)?>
-                                                            </td> -->
-                                                            <td data-title="<?=$this->lang->line('student_name')?>">
-                                                                <?php echo $student->srname; ?>
-                                                            </td>
-                                                            <td data-title="<?=$this->lang->line('student_roll')?>">
-                                                                <?php echo $student->srroll; ?>
-                                                            </td>
-                                                            <td data-title="<?=$this->lang->line('student_email')?>">
-                                                                <?php echo $student->email; ?>
-                                                            </td>
-                                                            <?php if(permissionChecker('student_edit') || permissionChecker('student_delete') || permissionChecker('student_view')) { ?>
-                                                                <td data-title="<?=$this->lang->line('action')?>">
-                                                                    <?php
-                                                                        echo btn_view('student/view/'.$student->srstudentID."/".$student->srclassesID, $this->lang->line('view'));
-                                                                        if(($siteinfos->school_year == $this->session->userdata('defaultschoolyearID')) || ($this->session->userdata('usertypeID') == 1)) {
-                                                                            echo btn_edit('student/edit/'.$student->srstudentID."/".$student->srclassesID, $this->lang->line('edit'));
-                                                                            echo btn_delete('student/delete/'.$student->srstudentID."/".$student->srclassesID, $this->lang->line('delete'));
-                                                                        }
-                                                                    ?>
-                                                                </td>
-                                                            <?php } ?>
-                                                       </tr>
-                                                    <?php $i++; }}} ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                            <?php } ?>
                         </div>
                     </div> <!-- nav-tabs-custom -->
                 <?php } else { ?>

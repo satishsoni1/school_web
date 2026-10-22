@@ -192,7 +192,7 @@ class Attendanceoverviewreport extends Admin_Controller {
 	public function getAttendacneOverviewReport() {
 		$retArray['status'] = FALSE;
 		$retArray['render'] = '';
-		if(permissionChecker('attendancereport')) {
+		if(permissionChecker('attendanceoverviewreport')) {
 			if($_POST) {
 				$usertype = $this->input->post('usertype');
 				$classesID = $this->input->post('classesID');

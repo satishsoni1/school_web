@@ -108,12 +108,11 @@ class Balancefeesreport extends Admin_Controller{
 
 	public function getStudent() {
 		$classesID = $this->input->post('classesID');
-		$sectionID = $this->input->post('sectionID');
 		$schoolyearID = $this->session->userdata('defaultschoolyearID');
-		
+
 		echo "<option value='0'>", $this->lang->line("balancefeesreport_please_select"),"</option>";
-		if((int)$classesID && (int)$sectionID && (int)$schoolyearID) {
-			$students = $this->studentrelation_m->get_order_by_studentrelation(array('srclassesID' => $classesID,'srsectionID' => $sectionID, 'srschoolyearID' => $schoolyearID));
+		if((int)$classesID && (int)$schoolyearID) {
+			$students = $this->studentrelation_m->get_order_by_studentrelation(array('srclassesID' => $classesID, 'srschoolyearID' => $schoolyearID));
 			if(customCompute($students)) {
 				foreach($students  as $student) {
 					echo "<option value=\"$student->srstudentID\">",$student->srname,"</option>";
@@ -153,9 +152,6 @@ class Balancefeesreport extends Admin_Controller{
 					if((int)$classesID) {
 						$studentArray['srclassesID'] = $classesID;
 					}
-					if((int)$sectionID) {
-						$studentArray['srsectionID'] = $sectionID;
-					}
 					if((int)$studentID) {
 						$studentArray['srstudentID'] = $studentID;
 					}
@@ -166,7 +162,7 @@ class Balancefeesreport extends Admin_Controller{
 					$this->data['classes'] = pluck($this->classes_m->general_get_classes(),'classes','classesID');
 					$this->data['sections'] = pluck($this->section_m->general_get_section(),'section','sectionID');
 		
-					$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report($this->input->post()));
+					$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report(array_merge($this->input->post(), array('studentIDs' => array_keys($this->data['students'])))));
 					$this->data['totalPayment'] = $this->totalPaymentAndWeaver($this->payment_m->get_order_by_payment(array('schoolyearID' => $schoolyearID)));
 					$this->data['totalweavar'] = $this->totalWeaver($this->weaverandfine_m->get_order_by_weaverandfine(array('schoolyearID'=>$schoolyearID)));
 
@@ -288,9 +284,6 @@ class Balancefeesreport extends Admin_Controller{
 				if((int)$classesID) {
 					$studentArray['srclassesID'] = $classesID;
 				}
-				if((int)$sectionID) {
-					$studentArray['srsectionID'] = $sectionID;
-				}
 				if((int)$studentID) {
 					$studentArray['srstudentID'] = $studentID;
 				}
@@ -298,7 +291,7 @@ class Balancefeesreport extends Admin_Controller{
 
 				$this->db->order_by('srclassesID','ASC');
 				$this->data['students'] = pluck($this->studentrelation_m->get_order_by_studentrelation($studentArray),'obj','srstudentID');
-				$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report($postArray));
+				$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report(array_merge($postArray, array('studentIDs' => array_keys($this->data['students'])))));
 				$this->data['totalPayment'] = $this->totalPaymentAndWeaver($this->payment_m->get_order_by_payment(array('schoolyearID' => $schoolyearID)));
 				$this->data['totalweavar'] = $this->totalWeaver($this->weaverandfine_m->get_order_by_weaverandfine(array('schoolyearID'=>$schoolyearID)));
 
@@ -369,9 +362,6 @@ class Balancefeesreport extends Admin_Controller{
 				if((int)$classesID) {
 					$studentArray['srclassesID'] = $classesID;
 				}
-				if((int)$sectionID) {
-					$studentArray['srsectionID'] = $sectionID;
-				}
 				if((int)$studentID) {
 					$studentArray['srstudentID'] = $studentID;
 				}
@@ -380,7 +370,7 @@ class Balancefeesreport extends Admin_Controller{
 				$this->db->order_by('srclassesID','ASC');
 				$this->data['students'] = pluck($this->studentrelation_m->get_order_by_studentrelation($studentArray),'obj','srstudentID');
 
-				$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report($postArray));
+				$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report(array_merge($postArray, array('studentIDs' => array_keys($this->data['students'])))));
 				$this->data['totalPayment'] = $this->totalPaymentAndWeaver($this->payment_m->get_order_by_payment(array('schoolyearID' => $schoolyearID)));
 				$this->data['totalweavar'] = $this->totalWeaver($this->weaverandfine_m->get_order_by_weaverandfine(array('schoolyearID'=>$schoolyearID)));
 				return $this->generateXML($this->data);															
@@ -403,13 +393,6 @@ class Balancefeesreport extends Admin_Controller{
 				$maxColumnCount = 10;
 			}
 
-			if($sectionID == 0) {
-				$maxColumnCount = 10;
-			}
-
-			if($classesID == 0 && $sectionID == 0) {
-				$maxColumnCount = 11;
-			}
 
 			$headerColumn = "A";
         	for($i= 1; $i < $maxColumnCount; $i++) {
@@ -426,12 +409,8 @@ class Balancefeesreport extends Admin_Controller{
 				$className .= ' : ';
 				$className .= isset($classes[$classesID]) ? $classes[$classesID] : $this->lang->line('balancefeesreport_all_class');
 				
-				$sectionName  = $this->lang->line('balancefeesreport_section'); 				
-				$sectionName .= " : ";
-				$sectionName .= isset($sections[$sectionID]) ? $sections[$sectionID] : $this->lang->line('balancefeesreport_all_section');
 			
 				$sheet->setCellValue('A'.$row, $className);
-				$sheet->setCellValue($headerColumn.$row, $sectionName);
 			} else {
 				$sheet->getRowDimension('1')->setVisible(false);
 			}
@@ -446,9 +425,6 @@ class Balancefeesreport extends Admin_Controller{
 	        	$headers['class'] = $this->lang->line('balancefeesreport_class');
 	        } 
 
-	        if($sectionID == 0) { 
-	        	$headers['section'] = $this->lang->line('balancefeesreport_section');
-	        }
 
 	        $headers['roll'] = $this->lang->line('balancefeesreport_roll');
 	        $headers['total_amount'] = $this->lang->line('balancefeesreport_fees_amount');
@@ -490,9 +466,6 @@ class Balancefeesreport extends Admin_Controller{
                     $studentArray[$i]['classes']  = isset($classes[$student->srclassesID]) ? $classes[$student->srclassesID] : '';
                 }
 
-                if($sectionID == 0) { 
-                	$studentArray[$i]['section'] = isset($sections[$student->srsectionID]) ? $sections[$student->srsectionID] : '';
-                }
 
 	      		$studentArray[$i]['srroll'] = $student->srroll;
 	      		$studentArray[$i]['amount'] = isset($totalAmountAndDiscount[$student->srstudentID]['amount']) ? number_format($totalAmountAndDiscount[$student->srstudentID]['amount'],2) : '0';
@@ -542,9 +515,6 @@ class Balancefeesreport extends Admin_Controller{
 	      		$studentArray[$i]['classes'] = '';
 	     	}
 
-	     	if($sectionID == 0) { 
-	        	$studentArray[$i]['section'] = '';
-	        }
 
 	      	$studentArray[$i]['srroll'] = '';
 	      	$studentArray[$i]['amount'] = number_format($totalAmount,2);
@@ -742,9 +712,6 @@ class Balancefeesreport extends Admin_Controller{
 					if((int)$classesID) {
 						$studentArray['srclassesID'] = $classesID;
 					}
-					if((int)$sectionID) {
-						$studentArray['srsectionID'] = $sectionID;
-					}
 					if((int)$studentID) {
 						$studentArray['srstudentID'] = $studentID;
 					}
@@ -756,7 +723,7 @@ class Balancefeesreport extends Admin_Controller{
 					$this->data['classes']  = pluck($this->classes_m->general_get_classes(),'classes','classesID');
 					$this->data['sections'] = pluck($this->section_m->general_get_section(),'section','sectionID');
 
-					$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report($postArray));
+					$this->data['totalAmountAndDiscount'] = $this->totalAmountAndDiscustomCompute($this->invoice_m->get_all_balancefees_for_report(array_merge($postArray, array('studentIDs' => array_keys($this->data['students'])))));
 					$this->data['totalPayment'] = $this->totalPaymentAndWeaver($this->payment_m->get_order_by_payment(array('schoolyearID' => $schoolyearID)));
 					$this->data['totalweavar'] = $this->totalWeaver($this->weaverandfine_m->get_order_by_weaverandfine(array('schoolyearID'=>$schoolyearID)));
 

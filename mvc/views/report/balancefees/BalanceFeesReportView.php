@@ -24,16 +24,6 @@
                      ?>
                 </div>
 
-                <div class="form-group col-sm-4" id="sectionDiv">
-                    <label><?=$this->lang->line("balancefeesreport_section")?></label>
-                    <?php
-                        $sectionArray = array(
-                            "0" => $this->lang->line("balancefeesreport_please_select"),
-                        );
-                        echo form_dropdown("sectionID", $sectionArray, set_value("sectionID"), "id='sectionID' class='form-control select2'");
-                     ?>
-                </div>
-
                 <div class="form-group col-sm-4" id="studentDiv">
                     <label><?=$this->lang->line("balancefeesreport_student")?></label>
                     <?php
@@ -88,52 +78,25 @@
 
     $('.select2').select2();
     $(function(){
-        $('#sectionDiv').hide('slow');
         $('#studentDiv').hide('slow');
     });
 
+    // No section filter: students are listed for the whole class.
     $(document).on('change', "#classesID", function() {
         $('#load_balancefeesreport').html("");
         var classesID = $(this).val();
-        
-        $('#sectionID').val(0);
+
         $('#studentID').html("<option value='0'>" + "<?=$this->lang->line("balancefeesreport_please_select")?>" +"</option>");
         $('#studentID').val(0);
-        
+
         if(classesID == '0'){
-            $("#sectionDiv").hide('slow');
             $("#studentDiv").hide('slow');
         } else {
-            $("#sectionDiv").show('slow');
             $("#studentDiv").show('slow');
-        }
-
-        if(classesID !=0) {
-            $.ajax({
-                type: 'POST',
-                url: "<?=base_url('balancefeesreport/getSection')?>",
-                data: {"classesID" : classesID},
-                dataType: "html",
-                success: function(data) {
-                   $('#sectionID').html(data);
-                }
-            });
-        }
-    });
-
-    $(document).on('change', "#sectionID", function() {
-        $('#load_balancefeesreport').html("");
-        var sectionID = $(this).val();
-        
-        $('#studentID').html("<option value='0'>" + "<?=$this->lang->line("balancefeesreport_please_select")?>" +"</option>");
-        $('#studentID').val(0);
-
-        var classesID = $('#classesID').val();
-        if(sectionID != 0 && classesID != 0) {
             $.ajax({
                 type: 'POST',
                 url: "<?=base_url('balancefeesreport/getStudent')?>",
-                data: {"classesID":classesID, "sectionID" : sectionID},
+                data: {"classesID" : classesID},
                 dataType: "html",
                 success: function(data) {
                    $('#studentID').html(data);
@@ -145,7 +108,7 @@
     $(document).on('click','#get_duefeesreport', function() {
         $('#load_balancefeesreport').html("");
         var classesID = $('#classesID').val();
-        var sectionID = $('#sectionID').val();
+        var sectionID = 0;
         var studentID = $('#studentID').val();
         var outstanding = $('#outstanding').val();
         

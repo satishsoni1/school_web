@@ -36,13 +36,7 @@
                                         echo $this->lang->line('balancefeesreport_class')." : ";
                                         echo isset($classes[$classesID]) ? $classes[$classesID] : $this->lang->line('balancefeesreport_all_class');
                                     ?>
-                                </h5>                         
-                                <h5 class="pull-right">
-                                    <?php
-                                       echo $this->lang->line('balancefeesreport_section')." : ";
-                                       echo isset($sections[$sectionID]) ? $sections[$sectionID] : $this->lang->line('balancefeesreport_all_section');
-                                    ?>
-                                </h5>                        
+                                </h5>                                                 
                             </div>
                         </div>
                     </div>
@@ -60,9 +54,6 @@
                                         <th><?=$this->lang->line('balancefeesreport_registerNO')?></th>
                                         <?php if($classesID == 0) { ?>
                                           <th><?=$this->lang->line('balancefeesreport_class')?></th>
-                                        <?php } ?>
-                                        <?php if($sectionID == 0) { ?>
-                                          <th><?=$this->lang->line('balancefeesreport_section')?></th>
                                         <?php } ?>
                                         <th><?=$this->lang->line('balancefeesreport_roll')?></th>
                                         <th><?=$this->lang->line('balancefeesreport_fees_amount')?></th>
@@ -130,11 +121,6 @@
                                                     </td>
                                                 <?php } ?>
 
-                                                <?php if($sectionID == 0) { ?>
-                                                    <td data-title="<?=$this->lang->line('balancefeesreport_section')?>">
-                                                        <?=isset($sections[$student->srsectionID]) ? $sections[$student->srsectionID] : ''?>
-                                                    </td>
-                                                <?php } ?>
 
                                                 <td data-title="<?=$this->lang->line('balancefeesreport_roll')?>">
                                                     <?=$student->srroll?>
@@ -196,13 +182,6 @@
                                                 $colspan = 5;
                                             }
 
-                                            if($sectionID == 0) {
-                                                $colspan = 5;
-                                            }
-
-                                            if($classesID == 0 && $sectionID == 0) {
-                                                $colspan = 6;
-                                            }
                                         ?>
                                         <td data-title="<?=$this->lang->line('balancefeesreport_grand_total')?>" class="text-right text-bold" colspan="<?=$colspan?>"><?=$this->lang->line('balancefeesreport_grand_total')?> <?=!empty($siteinfos->currency_code) ? '('.$siteinfos->currency_code.')' : ''?> </td>
                                         <td data-title="<?=$this->lang->line('balancefeesreport_total_fees_amount')?>" class="text-bold"><?=number_format($totalAmount,2)?></td>

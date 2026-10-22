@@ -176,8 +176,15 @@ class Admin_Controller extends MY_Controller {
 
         $sessionPermission     = $this->session->userdata('master_permission_set');
         $allMenus              = json_decode(json_encode(pluck($this->menu_m->get_order_by_menu([ 'status' => 1 ]), 'obj', 'menuID')), true);
+        // Every class has a single section, so Academic → Section is hidden from the sidebar (page still works by URL).
+        foreach ( $allMenus as $menuID => $menu ) {
+            if ( $menu['link'] == 'section' ) {
+                unset($allMenus[ $menuID ]);
+            }
+        }
 
-        // Teachers: no Parents, Exam, Message, Student Group or leave setup on the web panel (leave approval stays).
+        // Teachers: no Parents, Exam, Message, Student Group, Teacher, Routine, Teacher Attendance, Event, Holiday
+        // or leave setup on the web panel (leave approval and Leave Apply stay).
         if ( (int) $this->session->userdata('usertypeID') == 2 ) {
             $blockedModules = $this->_teacherBlockedModules($allMenus);
             if ( in_array($module, $blockedModules) ) {
@@ -674,10 +681,11 @@ class Admin_Controller extends MY_Controller {
     }
 
     // Menu links hidden from teachers: single items plus every item inside the Exam and Leave Application
-    // groups, except the Leave Application approval page itself.
+    // groups, except the Leave Application approval page and Leave Apply (teachers apply to the office).
     private function _teacherBlockedModules( $menus )
     {
-        $blocked      = [ 'parents', 'conversation', 'studentgroup' ];
+        $blocked      = [ 'parents', 'conversation', 'studentgroup',
+                          'teacher', 'routine', 'tattendance', 'event', 'holiday' ];
         $groupIDs     = [];
         foreach ( $menus as $menuID => $menu ) {
             if ( $menu['link'] == '#' && in_array($menu['menuName'], [ 'main_exam', 'main_leaveapplication' ]) ) {
@@ -685,7 +693,7 @@ class Admin_Controller extends MY_Controller {
             }
         }
         foreach ( $menus as $menu ) {
-            if ( in_array($menu['parentID'], $groupIDs) && !in_array($menu['link'], [ '#', 'leaveapplication' ]) ) {
+            if ( in_array($menu['parentID'], $groupIDs) && !in_array($menu['link'], [ '#', 'leaveapplication', 'leaveapply' ]) ) {
                 $blocked[] = $menu['link'];
             }
         }

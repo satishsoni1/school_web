@@ -7,7 +7,6 @@
             <?php
              echo btn_add_pdf('sattendance/print_preview/'.$student->studentID."/".$set, $this->lang->line('pdf_preview'))
             ?>
-            <button class="btn-cs btn-sm-cs" data-toggle="modal" data-target="#mail"><span class="fa fa-envelope-o"></span> <?=$this->lang->line('mail')?></button>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb">

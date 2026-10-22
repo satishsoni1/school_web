@@ -46,9 +46,6 @@
                     <div class="nav-tabs-custom">
                         <ul class="nav nav-tabs">
                             <li class="active"><a data-toggle="tab" href="#all" aria-expanded="true"><?=$this->lang->line("routine_all_routine")?></a></li>
-                            <?php foreach ($sections as $key => $section) {
-                                echo '<li class=""><a data-toggle="tab" href="#'. $section->sectionID .'" aria-expanded="false">'. $this->lang->line("routine_section")." ".$section->section. " ( ". $section->category." )".'</a></li>';
-                            } ?>
                         </ul>
 
                         <div class="tab-content" id="scrolling">
@@ -73,7 +70,6 @@
                                                                 }
                                                                 echo '<td class="text-center">';
                                                                     echo $routine->start_time.'-'.$routine->end_time.'<br/>';
-                                                                    echo $routine->section.'<br/>';
                                                                     echo $routine->subject.'<br/>';
                                                                     echo $routine->room.'<br/>';
                                                                     echo $routine->name.'<br/>';
@@ -107,65 +103,6 @@
                                 </div>
                             </div>
 
-                            <?php foreach ($sections as $key => $section) { ?>
-                                <div id="<?=$section->sectionID?>" class="tab-pane">
-                                    <div id="hide-table-2">
-                                        <table id="table" class="table table-bordered ">
-                                            <tbody>
-                                                <?php
-                                                    if(isset($allsection[$section->section]) && customCompute($allsection[$section->section])) {
-                                                        $map = function($r) {return $r->day;};
-                                                        $count = array_count_values(array_map($map, $allsection[$section->section]));
-                                                        $max = max($count);
-
-                                                        $flag = 0;
-                                                        foreach ($days as $dayKey => $day) {
-                                                            $row_count = 0;
-                                                            foreach($allsection[$section->section] as $routine) {
-                                                                if($routine->day == $dayKey) {
-                                                                    if(!in_array($dayKey, $weekends)) {
-                                                                       if($flag == 0) {
-                                                                            echo '<tr>';
-                                                                            echo '<td>'.$day.'</td>';
-                                                                            $flag = 1;
-                                                                       }
-                                                                        echo '<td class="text-center">';
-                                                                            echo $routine->start_time.'-'.$routine->end_time.'<br/>';
-                                                                            echo $routine->subject.'<br/>';
-                                                                            echo $routine->room.'<br/>';
-                                                                            echo $routine->name.'<br/>';
-                                                                            if(($siteinfos->school_year == $this->session->userdata('defaultschoolyearID')) || ($this->session->userdata('usertypeID') == 1)) {
-                                                                                if(permissionChecker('routine_edit')) {
-                                                                                    echo btn_edit('routine/edit/'.$routine->routineID.'/'.$set, $this->lang->line('edit'));
-                                                                                }
-
-                                                                                if(permissionChecker('routine_delete')) {
-                                                                                    echo btn_delete('routine/delete/'.$routine->routineID.'/'.$set, $this->lang->line('delete'));
-                                                                                }
-                                                                            }
-                                                                        echo '</td>';
-                                                                        $row_count++;
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            if($flag == 1) {
-                                                                while($row_count<$max) {
-                                                                    echo "<td class='text-center'>N/A</td>";
-                                                                    $row_count++;
-                                                                }
-                                                                echo '</tr>';
-                                                                $flag = 0;
-                                                            }
-                                                        }
-                                                    }
-                                                ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                </div>
-                            <?php } ?>
                         </div>
                     </div>
                 <?php } else { ?>
