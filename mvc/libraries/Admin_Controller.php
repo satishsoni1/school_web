@@ -199,6 +199,30 @@ class Admin_Controller extends MY_Controller {
             $this->session->set_userdata([ 'master_permission_set' => $sessionPermission ]);
         }
 
+        // Admins: Certificates (studentcertificate) just below Student, even before
+        // db_migration_student_certificate.sql has added its permission / menu rows.
+        if ( (int) $this->session->userdata('usertypeID') == 1 ) {
+            if ( !isset($sessionPermission['studentcertificate']) || $sessionPermission['studentcertificate'] != 'yes' ) {
+                $sessionPermission['studentcertificate'] = 'yes';
+                $this->session->set_userdata([ 'master_permission_set' => $sessionPermission ]);
+            }
+            if ( !in_array('studentcertificate', array_column($allMenus, 'link')) ) {
+                $certMenu = [ 'menuID' => 'studentcertificate', 'menuName' => 'Certificates', 'link' => 'studentcertificate',
+                    'icon' => 'fa-certificate', 'pullRight' => '', 'status' => 1, 'parentID' => 0, 'priority' => 0 ];
+                $withCert = [];
+                foreach ( $allMenus as $menuID => $menu ) {
+                    $withCert[ $menuID ] = $menu;
+                    if ( $menu['link'] == 'student' ) {
+                        $withCert['studentcertificate'] = $certMenu;
+                    }
+                }
+                if ( !isset($withCert['studentcertificate']) ) {
+                    $withCert['studentcertificate'] = $certMenu;
+                }
+                $allMenus = $withCert;
+            }
+        }
+
         $dbMenus               = $this->menuTree($allMenus, $sessionPermission);
         $this->data["dbMenus"] = $dbMenus;
 
