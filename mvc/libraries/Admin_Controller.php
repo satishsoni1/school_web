@@ -199,27 +199,48 @@ class Admin_Controller extends MY_Controller {
             $this->session->set_userdata([ 'master_permission_set' => $sessionPermission ]);
         }
 
-        // Admins: Certificates (studentcertificate) just below Student, even before
-        // db_migration_student_certificate.sql has added its permission / menu rows.
+        // Admin pages added in code, so they show without running their db_migration_*.sql:
+        // [link, menu name, icon, parent group menuName ('' = top level), placed after this link].
         if ( (int) $this->session->userdata('usertypeID') == 1 ) {
-            if ( !isset($sessionPermission['studentcertificate']) || $sessionPermission['studentcertificate'] != 'yes' ) {
-                $sessionPermission['studentcertificate'] = 'yes';
-                $this->session->set_userdata([ 'master_permission_set' => $sessionPermission ]);
-            }
-            if ( !in_array('studentcertificate', array_column($allMenus, 'link')) ) {
-                $certMenu = [ 'menuID' => 'studentcertificate', 'menuName' => 'Certificates', 'link' => 'studentcertificate',
-                    'icon' => 'fa-certificate', 'pullRight' => '', 'status' => 1, 'parentID' => 0, 'priority' => 0 ];
-                $withCert = [];
+            $codeMenus = [
+                [ 'studentcertificate', 'Certificates', 'fa-certificate', '', 'student' ],
+                [ 'ledgerbalancereport', 'Ledger-wise Balance Fees', 'fa-balance-scale', 'main_report', 'ledgerfeereport' ],
+                [ 'strengthreport', 'Academic Year Strength', 'fa-users', 'main_report', 'ledgerbalancereport' ],
+            ];
+            $permissionChanged = false;
+            $links = array_column($allMenus, 'link');
+            foreach ( $codeMenus as list($link, $name, $icon, $parentName, $after) ) {
+                if ( !isset($sessionPermission[ $link ]) || $sessionPermission[ $link ] != 'yes' ) {
+                    $sessionPermission[ $link ] = 'yes';
+                    $permissionChanged = true;
+                }
+                if ( in_array($link, $links) ) {
+                    continue;
+                }
+                $parentID = 0;
                 foreach ( $allMenus as $menuID => $menu ) {
-                    $withCert[ $menuID ] = $menu;
-                    if ( $menu['link'] == 'student' ) {
-                        $withCert['studentcertificate'] = $certMenu;
+                    if ( $parentName !== '' && $menu['menuName'] == $parentName && $menu['link'] == '#' ) {
+                        $parentID = $menuID;
+                        break;
                     }
                 }
-                if ( !isset($withCert['studentcertificate']) ) {
-                    $withCert['studentcertificate'] = $certMenu;
+                $item = [ 'menuID' => $link, 'menuName' => $name, 'link' => $link, 'icon' => $icon,
+                    'pullRight' => '', 'status' => 1, 'parentID' => $parentID, 'priority' => 0 ];
+                $withItem = [];
+                foreach ( $allMenus as $menuID => $menu ) {
+                    $withItem[ $menuID ] = $menu;
+                    if ( $menu['link'] == $after ) {
+                        $withItem[ $link ] = $item;
+                    }
                 }
-                $allMenus = $withCert;
+                if ( !isset($withItem[ $link ]) ) {
+                    $withItem[ $link ] = $item;
+                }
+                $allMenus = $withItem;
+                $links[] = $link;
+            }
+            if ( $permissionChanged ) {
+                $this->session->set_userdata([ 'master_permission_set' => $sessionPermission ]);
             }
         }
 
