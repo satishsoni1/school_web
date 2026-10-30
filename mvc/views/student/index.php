@@ -65,6 +65,7 @@
                                                 <th class="col-sm-1"><?=$this->lang->line('student_classes')?></th>
                                                 <?php } ?>
                                                 <th class="col-sm-1"><?=$this->lang->line('student_phone')?></th>
+                                                <th class="col-sm-1">Username</th>
                                                 <th class="col-sm-1">Password</th>
                                                 <?php if(permissionChecker('student_edit')) { ?>
                                                     <th class="col-sm-1"><?=$this->lang->line('student_status')?></th>
@@ -101,8 +102,11 @@
                                                     <td data-title="<?=$this->lang->line('student_phone')?>">
                                                         <?php echo $student->phone; ?>
                                                     </td>
+                                                    <td data-title="Username">
+                                                        <?=html_escape($student->username)?>
+                                                    </td>
                                                     <td data-title="Password">
-                                                        <?php echo $student->password; ?>
+                                                        <?=html_escape($student->password)?>
                                                     </td>
                                                     <?php if(permissionChecker('student_edit')) { ?>
                                                     <td data-title="<?=$this->lang->line('student_status')?>">
