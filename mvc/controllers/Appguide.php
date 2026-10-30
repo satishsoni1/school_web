@@ -8,9 +8,17 @@ class Appguide extends CI_Controller
 {
     public function index()
     {
+        // Plain CI_Controller: the database is not autoloaded here (the app's base controllers load it).
+        // School name / logo are optional; the page renders with defaults if they can't be read.
         $settings = array();
-        foreach ($this->db->where_in('fieldoption', array('sname', 'photo'))->get('setting')->result() as $row) {
-            $settings[$row->fieldoption] = $row->value;
+        try {
+            $this->load->database();
+            $query = $this->db->where_in('fieldoption', array('sname', 'photo'))->get('setting');
+            foreach ($query ? $query->result() : array() as $row) {
+                $settings[$row->fieldoption] = $row->value;
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'appguide: ' . $e->getMessage());
         }
         $this->load->view('appguide/index', array(
             'schoolName' => isset($settings['sname']) && $settings['sname'] !== '' ? $settings['sname'] : 'P.P. Gagangiri Maharaj International School',
