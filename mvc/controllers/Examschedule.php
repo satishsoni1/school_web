@@ -141,7 +141,7 @@ class Examschedule extends Admin_Controller {
 			if($classesID > 0) {
 				$this->data['subjects'] = $this->subject_m->general_get_order_by_subject(array('classesID' => $classesID));
 				$this->data['sections'] = $this->section_m->general_get_order_by_section(array("classesID" => $classesID));
-				$this->data['exams']    = $this->marksetting_m->get_exam($this->data['siteinfos']->marktypeID, $classesID);
+				$this->data['exams']    = $this->classExams($classesID);
 			} else {
 				$this->data['subjects'] = [];
 				$this->data['sections'] = [];
@@ -214,7 +214,7 @@ class Examschedule extends Admin_Controller {
 						}
 						$this->data['subjects'] = $this->subject_m->general_get_order_by_subject(array('classesID' => $classID));
 						$this->data['sections'] = $this->section_m->general_get_order_by_section(array("classesID" => $classID));
-						$this->data['exams']    = $this->marksetting_m->get_exam($this->data['siteinfos']->marktypeID, $classID);
+						$this->data['exams']    = $this->classExams($classID);
 						$this->data['set']      = $url;
 
 						if($_POST) {
@@ -334,7 +334,7 @@ class Examschedule extends Admin_Controller {
 		$classesID = $this->input->post('classesID');
 		echo "<option value='0'>", $this->lang->line("examschedule_select_exam"),"</option>";
 		if((int)$classesID) {
-			$exams    = pluck($this->marksetting_m->get_exam($this->data['siteinfos']->marktypeID, $classesID), 'obj', 'examID');
+			$exams    = pluck($this->classExams($classesID), 'obj', 'examID');
 			if(customCompute($exams)) {
 				foreach ($exams as $exam) {
 					echo "<option value=".$exam->examID.">".$exam->exam."</option>";
@@ -371,7 +371,43 @@ class Examschedule extends Admin_Controller {
 			$this->form_validation->set_message("unique_examID", "The %s field is required");
 	     	return FALSE;
 		}
+		// Nursery / Prep only take Evaluation 1-4, Grades only their Term exams.
+		$allowed = pluck($this->classExams($this->input->post('classesID')), 'examID', 'examID');
+		if(!isset($allowed[$examID])) {
+			$this->form_validation->set_message("unique_examID", "This %s is not available for the selected class");
+			return FALSE;
+		}
 		return TRUE;
+	}
+
+	/**
+	 * Exams a class can schedule. Nursery / Prep: Evaluation 1-4 (same names as Exam Timetable,
+	 * Periodictest_m::$prePrimaryExams; created in the exam list on first use). Grades: the exams
+	 * from mark settings, as before.
+	 */
+	private function classExams($classesID) {
+		$classesID = (int) $classesID;
+		if(!$classesID) {
+			return [];
+		}
+		$class = $this->db->get_where('classes', array('classesID' => $classesID))->row();
+		$this->load->model('periodictest_m');
+		$evaluations = Periodictest_m::$prePrimaryExams;
+		if($class && preg_match('/nursery|prep|pre[\s-]*primary|kg/i', $class->classes)) {
+			$rows = pluck($this->db->where_in('exam', $evaluations)->get('exam')->result(), 'obj', 'exam');
+			foreach($evaluations as $name) {
+				if(!isset($rows[$name])) {
+					$this->db->insert('exam', array('exam' => $name, 'date' => date('Y-m-d'), 'note' => 'Nursery / Prep evaluation'));
+					$rows[$name] = (object) array('examID' => $this->db->insert_id(), 'exam' => $name);
+				}
+			}
+			// Evaluation 1-4 in order.
+			return array_values(array_map(function ($name) use ($rows) { return $rows[$name]; }, $evaluations));
+		}
+		$exams = $this->marksetting_m->get_exam($this->data['siteinfos']->marktypeID, $classesID);
+		return array_values(array_filter((array) $exams, function ($exam) use ($evaluations) {
+			return !in_array($exam->exam, $evaluations, true);
+		}));
 	}
 
 	public function unique_classesID() {
