@@ -18,8 +18,12 @@
                 <label>Exam</label>
                 <select class="form-control" name="exam">
                     <option value="">All exams</option>
-                    <?php foreach ($exams as $e) { ?>
-                        <option value="<?=html_escape($e)?>" <?=$filter['exam'] === $e ? 'selected' : ''?>><?=html_escape($e)?></option>
+                    <?php foreach (array('Grades 1-10' => Periodictest_m::$exams, 'Nursery / Prep' => Periodictest_m::$prePrimaryExams) as $groupLabel => $groupExams) { ?>
+                        <optgroup label="<?=$groupLabel?>">
+                        <?php foreach ($groupExams as $e) { ?>
+                            <option value="<?=html_escape($e)?>" <?=$filter['exam'] === $e ? 'selected' : ''?>><?=html_escape($e)?></option>
+                        <?php } ?>
+                        </optgroup>
                     <?php } ?>
                 </select>
             </div>

@@ -11,10 +11,24 @@ class Periodictest_m extends CI_Model
     const SCHEDULE = 'periodic_test_schedule';
     const SYLLABUS = 'periodic_test_syllabus';
 
+    // Grades 1-10 have PT-1 / Half Yearly / PT-2 / Annual; Nursery / Prep have Evaluation 1-4 (exams_for()).
     public static $exams  = array('PT-1', 'Half Yearly', 'PT-2', 'Annual');
+    public static $prePrimaryExams = array('Evaluation 1', 'Evaluation 2', 'Evaluation 3', 'Evaluation 4');
     // Grades 1-10, then Pre-Primary stored as 101-103 (no clash with grade numbers; see label()).
     public static $grades = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 101, 102, 103);
     public static $prePrimary = array(101 => 'Nursery', 102 => 'Prep 1', 103 => 'Prep 2');
+
+    /** The exams a grade code has: Evaluation 1-4 for Nursery / Prep, PT-1 … Annual for Grades 1-10. */
+    public static function exams_for($grade)
+    {
+        return isset(self::$prePrimary[(int) $grade]) ? self::$prePrimaryExams : self::$exams;
+    }
+
+    /** Every exam name, grades' exams first (for "All exams" filters and ordering). */
+    public static function all_exams()
+    {
+        return array_merge(self::$exams, self::$prePrimaryExams);
+    }
 
     /** 3 -> "Grade 3", 102 -> "Prep 1". */
     public static function label($grade)
@@ -90,7 +104,7 @@ class Periodictest_m extends CI_Model
 
     public static function valid_grade_exam($grade, $exam)
     {
-        return in_array((int) $grade, self::$grades, true) && in_array($exam, self::$exams, true);
+        return in_array((int) $grade, self::$grades, true) && in_array($exam, self::exams_for($grade), true);
     }
 
     private function decorate(array $rows)

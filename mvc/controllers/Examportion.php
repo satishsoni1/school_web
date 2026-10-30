@@ -32,7 +32,7 @@ class Examportion extends Admin_Controller
         $this->data['rows']    = $this->periodictest_m->get_rows(Periodictest_m::SYLLABUS, $grade, $exam, array('id' => 'ASC'));
         $this->data['filter']  = array('grade' => $grade, 'exam' => $exam);
         $this->data['grades']  = Periodictest_m::$grades;
-        $this->data['exams']   = Periodictest_m::$exams;
+        $this->data['exams']   = Periodictest_m::all_exams();
         $this->data['subview'] = 'examportion/index';
         $this->load->view('_layout_main', $this->data);
     }
@@ -92,7 +92,12 @@ class Examportion extends Admin_Controller
 
         $this->data['row']     = $row;
         $this->data['grades']  = Periodictest_m::$grades;
-        $this->data['exams']   = Periodictest_m::$exams;
+        $this->data['exams']   = Periodictest_m::all_exams();
+        // Nursery / Prep: Evaluation 1-4; Grades: PT-1 … Annual. The form shows the chosen grade's exams.
+        $this->data['examsByGrade'] = array();
+        foreach (Periodictest_m::$grades as $g) {
+            $this->data['examsByGrade'][$g] = Periodictest_m::exams_for($g);
+        }
         $this->data['subview'] = 'examportion/form';
         $this->load->view('_layout_main', $this->data);
     }
@@ -101,10 +106,10 @@ class Examportion extends Admin_Controller
     {
         $grade = (int) $this->input->get('grade');
         $exam  = (string) $this->input->get('exam');
-        return array(
-            in_array($grade, Periodictest_m::$grades, true) ? $grade : 0,
-            in_array($exam, Periodictest_m::$exams, true) ? $exam : '',
-        );
+        $grade = in_array($grade, Periodictest_m::$grades, true) ? $grade : 0;
+        // An exam the chosen grade doesn't have (e.g. PT-1 for Nursery) means "all exams".
+        $valid = $grade ? Periodictest_m::exams_for($grade) : Periodictest_m::all_exams();
+        return array($grade, in_array($exam, $valid, true) ? $exam : '');
     }
 
     private function listUrl()

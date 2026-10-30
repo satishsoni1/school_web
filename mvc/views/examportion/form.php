@@ -33,7 +33,7 @@ $back = (string) $this->input->get('back');
                     <div class="form-group">
                         <label class="col-sm-2 control-label">Exam <span class="text-red">*</span></label>
                         <div class="col-sm-4">
-                            <select class="form-control" name="exam" required>
+                            <select class="form-control" name="exam" id="pt-exam" required>
                                 <?php foreach ($exams as $e) { ?>
                                     <option value="<?=html_escape($e)?>" <?=$val('exam', 'PT-1') === $e ? 'selected' : ''?>><?=html_escape($e)?></option>
                                 <?php } ?>
@@ -44,7 +44,7 @@ $back = (string) $this->input->get('back');
                     <div class="form-group">
                         <label class="col-sm-2 control-label">Grade <span class="text-red">*</span></label>
                         <div class="col-sm-4">
-                            <select class="form-control" name="grade" required>
+                            <select class="form-control" name="grade" id="pt-grade" required>
                                 <option value="">Select grade</option>
                                 <?php foreach ($grades as $g) { ?>
                                     <option value="<?=$g?>" <?=(int) $val('grade') === $g ? 'selected' : ''?>><?=Periodictest_m::label($g)?></option>
@@ -83,3 +83,19 @@ $back = (string) $this->input->get('back');
         </div>
     </div>
 </div>
+
+<script>
+// Nursery / Prep have Evaluation 1-4, Grades 1-10 PT-1 … Annual: show only the chosen grade's exams.
+(function () {
+    var examsByGrade = <?=json_encode($examsByGrade)?>;
+    var $exam = $('#pt-exam'), $grade = $('#pt-grade');
+    function fill() {
+        var list = examsByGrade[$grade.val()] || examsByGrade[1];
+        var current = $exam.val();
+        $exam.empty();
+        $.each(list, function (i, e) { $exam.append($('<option>', {value: e, text: e, selected: e === current})); });
+    }
+    $grade.on('change', fill);
+    fill();
+})();
+</script>

@@ -8,15 +8,14 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * Exam timetable + portion (syllabus) for the app's "Exams" page.
  *
  * Rows in periodic_test_schedule / periodic_test_syllabus are keyed by GRADE (1-10) and EXAM
- * ('PT-1', 'Half Yearly', 'PT-2', 'Annual'); every section of a grade (Grade 1 A/B/C) shares them.
+ * ('PT-1', 'Half Yearly', 'PT-2', 'Annual'; Nursery / Prep: 'Evaluation 1'-'Evaluation 4', see
+ * Periodictest_m::exams_for()); every section of a grade (Grade 1 A/B/C) shares them.
  * The grade is read from the class name ("Grade 1 A" -> 1); Nursery / Prep 1 / Prep 2 use 101 / 102 / 103.
  * Until db_migration_exam_portion.sql adds the `grade`/`exam` columns, the legacy `classesID`
  * column (which already held the grade number) is used and every row counts as PT-1.
  */
 class Periodictest extends Api_Controller
 {
-    const EXAMS = ['PT-1', 'Half Yearly', 'PT-2', 'Annual'];
-
     public function __construct()
     {
         parent::__construct();
@@ -59,7 +58,7 @@ class Periodictest extends Api_Controller
             $rows = $this->db->get()->result_array();
         }
 
-        $examOrder = array_flip(self::EXAMS);
+        $examOrder = array_flip(Periodictest_m::all_exams());
         foreach ($rows as &$row) {
             $row['exam']       = isset($row['exam']) && $row['exam'] !== '' ? $row['exam'] : 'PT-1';
             $row['grade']      = $grade;
