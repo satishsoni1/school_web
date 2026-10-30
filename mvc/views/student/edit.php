@@ -378,6 +378,19 @@ if (isset($student->father_name) && !empty($student->father_name)) {
                         </div>
                     </div>
 
+                    <?php if ($this->session->userdata('usertypeID') == 1) { ?>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group <?=form_error('username') ? 'has-error' : ''?>">
+                                <label for="username">Username (app login) <span class="text-red">*</span></label>
+                                <input type="text" class="form-control" id="username" name="username" value="<?=set_value('username', $student->username)?>" maxlength="40" autocomplete="off">
+                                <span class="help-block" style="margin-bottom:0;">Usually the mobile number. Must not be used by any other login.</span>
+                                <span class="text-danger"><?=form_error('username')?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php } ?>
+
                     <div class="row">
                         <div class="col-sm-8">
                             <div class="form-group <?=form_error('address') ? 'has-error' : ''?>">

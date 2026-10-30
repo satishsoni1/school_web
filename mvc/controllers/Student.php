@@ -612,7 +612,62 @@ class Student extends Admin_Controller {
                 'rules' => 'trim|max_length[10]|callback_date_valid|xss_clean'
             )
         );
+        // Admins set the app login on the form; for others it is left alone (edit) or the mobile number (add).
+        if ($this->session->userdata('usertypeID') == 1) {
+            $rules[] = array(
+                'field' => 'username',
+                'label' => 'Username',
+                'rules' => 'trim|required|max_length[40]|xss_clean|callback_lol_username'
+            );
+        }
         return $rules;
+    }
+
+    /** Mobile number (student phone, else the guardian's) as a free username: 9876543210, 9876543210-2…; else the register no. */
+    private function defaultUsername($phone, $parentID, $registerNO) {
+        $base = $this->mobileNumber($phone);
+        if ($base === '' && (int) $parentID) {
+            $parent = $this->db->select('phone')->get_where('parents', array('parentsID' => (int) $parentID))->row();
+            $base = $parent ? $this->mobileNumber($parent->phone) : '';
+        }
+        if ($base === '') {
+            $base = trim((string) $registerNO) !== '' ? trim((string) $registerNO) : 'student' . date('ymdHis');
+        }
+        $username = $base;
+        for ($i = 2; $this->usernameTaken($username); $i++) {
+            $username = $base . '-' . $i;
+        }
+        return $username;
+    }
+
+    /** First 10-digit Indian mobile in a free-text phone field ("+91 98…", "098…", "98… / 88…"), or ''. */
+    private function mobileNumber($phone) {
+        foreach (preg_split('/[\/,;|]+/', (string) $phone) as $part) {
+            $digits = preg_replace('/\D/', '', $part);
+            if (strlen($digits) === 12 && substr($digits, 0, 2) === '91') {
+                $digits = substr($digits, 2);
+            } elseif (strlen($digits) === 11 && $digits[0] === '0') {
+                $digits = substr($digits, 1);
+            }
+            if (preg_match('/^[6-9]\d{9}$/', $digits)) {
+                return $digits;
+            }
+        }
+        return '';
+    }
+
+    /** Is the username used by any login (other than student $exceptStudentID)? */
+    private function usernameTaken($username, $exceptStudentID = 0) {
+        foreach (array('student', 'parents', 'teacher', 'user', 'systemadmin') as $table) {
+            $this->db->where('username', $username);
+            if ($table === 'student' && $exceptStudentID) {
+                $this->db->where('studentID !=', (int) $exceptStudentID);
+            }
+            if ($this->db->count_all_results($table) > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function photoupload() {
@@ -784,7 +839,9 @@ class Student extends Admin_Controller {
                     $array["birth_state"] = $this->input->post("birth_state");
                     $array["birth_country"] = $this->input->post("birth_country");
 
-                    $array["username"] = strtoupper($this->input->post("name"));
+                    $array["username"] = $this->session->userdata('usertypeID') == 1
+                        ? $this->input->post("username")
+                        : $this->defaultUsername($this->input->post("phone"), $this->input->post("guargianID"), $this->input->post("registerNO"));
                     $array['password'] = "ppgmis";
                     $array['usertypeID'] = 3;
                     $array['parentID'] = $this->input->post('guargianID');
@@ -922,7 +979,9 @@ class Student extends Admin_Controller {
                             $array["birth_state"] = $this->input->post("birth_state");
                             $array["birth_country"] = $this->input->post("birth_country");
 
-                            $array["username"] = strtoupper($this->input->post("name"));
+                            if ($this->session->userdata('usertypeID') == 1) {
+                                $array["username"] = $this->input->post("username");
+                            }
                             $array["modify_date"] = date("Y-m-d H:i:s");
                             $array['photo'] = $this->upload_data['file']['file_name'];
                             
@@ -1109,48 +1168,14 @@ class Student extends Admin_Controller {
     }
 
     public function lol_username() {
-        $id = htmlentities(escapeString($this->uri->segment(3)));
-        if((int)$id) {
-            $student = $this->student_m->general_get_single_student(array('studentID' => $id));
-            $tables = array('student' => 'student', 'parents' => 'parents', 'teacher' => 'teacher', 'user' => 'user', 'systemadmin' => 'systemadmin');
-            $array = array();
-            $i = 0;
-            foreach ($tables as $table) {
-                $user = $this->student_m->get_username($table, array("username" => $this->input->post('username'), "username !=" => $student->username));
-                if(customCompute($user)) {
-                    $this->form_validation->set_message("lol_username", "%s already exists");
-                    $array['permition'][$i] = 'no';
-                } else {
-                    $array['permition'][$i] = 'yes';
-                }
-                $i++;
-            }
-            if(in_array('no', $array['permition'])) {
-                return FALSE;
-            } else {
-                return TRUE;
-            }
-        } else {
-            $tables = array('student' => 'student', 'parents' => 'parents', 'teacher' => 'teacher', 'user' => 'user', 'systemadmin' => 'systemadmin');
-            $array = array();
-            $i = 0;
-            foreach ($tables as $table) {
-                $user = $this->student_m->get_username($table, array("username" => $this->input->post('username')));
-                if(customCompute($user)) {
-                    $this->form_validation->set_message("lol_username", "%s already exists");
-                    $array['permition'][$i] = 'no';
-                } else {
-                    $array['permition'][$i] = 'yes';
-                }
-                $i++;
-            }
-            if(in_array('no', $array['permition'])) {
-                return FALSE;
-            } else {
-                return TRUE;
-            }
+        $id = (int) htmlentities(escapeString($this->uri->segment(3)));
+        if ($this->usernameTaken($this->input->post('username'), $id)) {
+            $this->form_validation->set_message("lol_username", "%s already exists");
+            return FALSE;
         }
+        return TRUE;
     }
+
 
     public function date_valid($date) {
         if($date) {

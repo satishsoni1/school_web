@@ -9,6 +9,9 @@
  * Options:
  *   --password=ppgmis   common password (default: ppgmis)
  *   --all               every student record, not only students enrolled in the running school year
+ *   --only-name         only students whose username is not already a mobile number (e.g. the old
+ *                       name-as-username logins); everyone else keeps their login
+ *   --keep-password     change the username only, leave passwords as they are
  *   --env=development   DB config to use (mvc/config/<env>/database.php), same default as index.php
  *
  * Rules:
@@ -29,12 +32,16 @@ if (PHP_SAPI !== 'cli') {
     exit("CLI only\n");
 }
 
-$opts = ['apply' => false, 'all' => false, 'password' => 'ppgmis', 'env' => 'development', 'restore' => null];
+$opts = ['apply' => false, 'all' => false, 'only_name' => false, 'keep_password' => false, 'password' => 'ppgmis', 'env' => 'development', 'restore' => null];
 foreach (array_slice($argv, 1) as $arg) {
     if ($arg === '--apply') {
         $opts['apply'] = true;
     } elseif ($arg === '--all') {
         $opts['all'] = true;
+    } elseif ($arg === '--only-name') {
+        $opts['only_name'] = true;
+    } elseif ($arg === '--keep-password') {
+        $opts['keep_password'] = true;
     } elseif (preg_match('/^--(password|env|restore)=(.*)$/', $arg, $m)) {
         $opts[$m[1]] = $m[2];
     } else {
@@ -97,6 +104,13 @@ if (!$opts['all']) {
 $sql .= " ORDER BY s.studentID";
 $students = $mysqli->query($sql)->fetch_all(MYSQLI_ASSOC);
 $scope = $opts['all'] ? 'all student records' : "students enrolled in school year $schoolyearID";
+if ($opts['only_name']) {
+    // Already a mobile login (9876543210 or 9876543210-2): leave it.
+    $students = array_values(array_filter($students, function ($s) {
+        return !preg_match('/^[6-9]\d{9}(-\d+)?$/', trim((string) $s['username']));
+    }));
+    $scope .= ' whose username is not a mobile number';
+}
 echo count($students) . " $scope\n";
 
 /** First valid 10-digit Indian mobile in a free-text phone field ("98.../ 88..." allowed), or null. */
@@ -167,7 +181,7 @@ $fh = fopen($reportFile, 'w');
 fputcsv($fh, ['studentID', 'name', 'class', 'old_username', 'new_username', 'new_password', 'status', 'note'], ',', '"', '\\');
 foreach ($plan as $p) {
     fputcsv($fh, [$p['studentID'], $p['name'], $p['classes'], $p['username'], $p['new_username'],
-        $p['status'] === 'CHANGE' ? $opts['password'] : '', $p['status'], $p['note']], ',', '"', '\\');
+        $p['status'] === 'CHANGE' ? ($opts['keep_password'] ? '(unchanged)' : $opts['password']) : '', $p['status'], $p['note']], ',', '"', '\\');
 }
 fclose($fh);
 
@@ -176,7 +190,7 @@ echo "  will change          : {$stats['change']}\n";
 echo "    using parent mobile: {$stats['from_parent']}\n";
 echo "    with -2/-3 suffix  : {$stats['suffixed']}  (shared number / number already a login)\n";
 echo "  skipped (no mobile)  : {$stats['no_mobile']}\n";
-echo "  common password      : {$opts['password']}\n";
+echo "  common password      : " . ($opts['keep_password'] ? '(unchanged)' : $opts['password']) . "\n";
 echo "Report: $reportFile\n";
 
 if (!$opts['apply']) {
@@ -190,6 +204,10 @@ $backupFile = __DIR__ . "/backups/student_login_backup_$stamp.csv";
 $fh = fopen($backupFile, 'w');
 fputcsv($fh, ['studentID', 'username', 'password'], ',', '"', '\\');
 $toChange = array_filter($plan, function ($p) { return $p['status'] === 'CHANGE'; });
+if (!$toChange) {
+    echo "Nothing to change.\n";
+    exit(0);
+}
 $ids = implode(',', array_map('intval', array_column($toChange, 'studentID')));
 foreach ($mysqli->query("SELECT studentID, username, password FROM student WHERE studentID IN ($ids)")->fetch_all() as $r) {
     fputcsv($fh, $r, ',', '"', '\\');
@@ -198,11 +216,17 @@ fclose($fh);
 chmod($backupFile, 0600);
 echo "Backup of current logins: $backupFile\n";
 
-$stmt = $mysqli->prepare("UPDATE student SET username = ?, password = ? WHERE studentID = ?");
+$stmt = $opts['keep_password']
+    ? $mysqli->prepare("UPDATE student SET username = ? WHERE studentID = ?")
+    : $mysqli->prepare("UPDATE student SET username = ?, password = ? WHERE studentID = ?");
 $mysqli->begin_transaction();
 try {
     foreach ($toChange as $p) {
-        $stmt->bind_param('ssi', $p['new_username'], $opts['password'], $p['studentID']);
+        if ($opts['keep_password']) {
+            $stmt->bind_param('si', $p['new_username'], $p['studentID']);
+        } else {
+            $stmt->bind_param('ssi', $p['new_username'], $opts['password'], $p['studentID']);
+        }
         $stmt->execute();
     }
     $mysqli->commit();

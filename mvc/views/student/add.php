@@ -356,6 +356,19 @@
                         </div>
                     </div>
 
+                    <?php if ($this->session->userdata('usertypeID') == 1) { ?>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group <?=form_error('username') ? 'has-error' : ''?>">
+                                <label for="username">Username (app login) <span class="text-red">*</span></label>
+                                <input type="text" class="form-control" id="username" name="username" value="<?=set_value('username')?>" maxlength="40" autocomplete="off">
+                                <span class="help-block" style="margin-bottom:0;">Fills with the mobile number as you type it. Siblings sharing a number need a different one, e.g. <code>9876543210-2</code>.</span>
+                                <span class="text-danger"><?=form_error('username')?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php } ?>
+
                     <div class="row">
                         <div class="col-sm-8">
                             <div class="form-group <?=form_error('address') ? 'has-error' : ''?>">
@@ -392,6 +405,21 @@
         <?php } ?>
     </div></div><script type="text/javascript">
 $( ".select2" ).select2();
+
+// Username follows the mobile number (digits, +91 / leading 0 dropped) until the admin types their own.
+(function () {
+    var $user = $('#username');
+    if (!$user.length) { return; }
+    var auto = $user.val() === '';
+    $user.on('input', function () { auto = $user.val() === ''; });
+    $('#phone').on('input', function () {
+        if (!auto) { return; }
+        var d = String($(this).val().split(/[\/,;|]/)[0]).replace(/\D/g, '');
+        if (d.length === 12 && d.indexOf('91') === 0) { d = d.slice(2); }
+        if (d.length === 11 && d.charAt(0) === '0') { d = d.slice(1); }
+        $user.val(d);
+    });
+})();
 $('#dob').datepicker({ startView: 2 });
 $('#admission_date').datepicker({ startView: 2 });
 
