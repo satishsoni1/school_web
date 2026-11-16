@@ -16,9 +16,10 @@
         <form class="form-inline" method="get" action="<?=base_url('examportion/index')?>" style="margin-bottom:10px;">
             <div class="form-group">
                 <label>Exam</label>
-                <select class="form-control" name="exam">
+                <select class="form-control" name="exam" id="pt-filter-exam">
                     <option value="">All exams</option>
                     <?php foreach (array('Grades 1-10' => Periodictest_m::$exams, 'Nursery / Prep' => Periodictest_m::$prePrimaryExams) as $groupLabel => $groupExams) { ?>
+                        <?php if ($filter['grade'] && Periodictest_m::exams_for($filter['grade']) !== $groupExams) continue; ?>
                         <optgroup label="<?=$groupLabel?>">
                         <?php foreach ($groupExams as $e) { ?>
                             <option value="<?=html_escape($e)?>" <?=$filter['exam'] === $e ? 'selected' : ''?>><?=html_escape($e)?></option>
@@ -29,7 +30,7 @@
             </div>
             <div class="form-group">
                 <label>Grade</label>
-                <select class="form-control" name="grade">
+                <select class="form-control" name="grade" id="pt-filter-grade">
                     <option value="">All grades</option>
                     <?php foreach ($grades as $g) { ?>
                         <option value="<?=$g?>" <?=$filter['grade'] === $g ? 'selected' : ''?>><?=Periodictest_m::label($g)?></option>
@@ -74,3 +75,26 @@
         </div>
     </div>
 </div>
+
+<script>
+// A chosen grade only lists its own exams (Nursery / Prep: Evaluation 1-4; Grades: PT-1 … Annual).
+(function () {
+    var groups = <?=json_encode(array('Grades 1-10' => Periodictest_m::$exams, 'Nursery / Prep' => Periodictest_m::$prePrimaryExams))?>;
+    var preGrades = <?=json_encode(array_map('strval', array_keys(Periodictest_m::$prePrimary)))?>;
+    var exam = document.getElementById('pt-filter-exam'), grade = document.getElementById('pt-filter-grade');
+    grade.addEventListener('change', function () {
+        var current = exam.value, g = grade.value;
+        exam.innerHTML = '';
+        exam.appendChild(new Option('All exams', ''));
+        for (var label in groups) {
+            if (g !== '' && (preGrades.indexOf(g) !== -1) !== (label === 'Nursery / Prep')) continue;
+            var og = document.createElement('optgroup');
+            og.label = label;
+            for (var i = 0; i < groups[label].length; i++) {
+                og.appendChild(new Option(groups[label][i], groups[label][i], false, groups[label][i] === current));
+            }
+            exam.appendChild(og);
+        }
+    });
+})();
+</script>

@@ -14,20 +14,35 @@ class Periodictest_m extends CI_Model
     // Grades 1-10 have PT-1 / Half Yearly / PT-2 / Annual; Nursery / Prep have Evaluation 1-4 (exams_for()).
     public static $exams  = array('PT-1', 'Half Yearly', 'PT-2', 'Annual');
     public static $prePrimaryExams = array('Evaluation 1', 'Evaluation 2', 'Evaluation 3', 'Evaluation 4');
+    // Grade 10 (board year) also has a Preliminary exam before the Annual / Board exam.
+    const PRELIMINARY = 'Preliminary';
     // Grades 1-10, then Pre-Primary stored as 101-103 (no clash with grade numbers; see label()).
     public static $grades = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 101, 102, 103);
     public static $prePrimary = array(101 => 'Nursery', 102 => 'Prep 1', 103 => 'Prep 2');
 
-    /** The exams a grade code has: Evaluation 1-4 for Nursery / Prep, PT-1 … Annual for Grades 1-10. */
+    /** The exams a grade code has: Evaluation 1-4 for Nursery / Prep, PT-1 … Annual for Grades 1-10
+     *  (Grade 10 adds Preliminary before Annual). */
     public static function exams_for($grade)
     {
-        return isset(self::$prePrimary[(int) $grade]) ? self::$prePrimaryExams : self::$exams;
+        $grade = (int) $grade;
+        if (isset(self::$prePrimary[$grade])) {
+            return self::$prePrimaryExams;
+        }
+        return $grade === 10 ? self::with_preliminary() : self::$exams;
+    }
+
+    /** PT-1, Half Yearly, PT-2, Preliminary, Annual. */
+    private static function with_preliminary()
+    {
+        $exams = self::$exams;
+        array_splice($exams, array_search('Annual', $exams, true), 0, self::PRELIMINARY);
+        return $exams;
     }
 
     /** Every exam name, grades' exams first (for "All exams" filters and ordering). */
     public static function all_exams()
     {
-        return array_merge(self::$exams, self::$prePrimaryExams);
+        return array_merge(self::with_preliminary(), self::$prePrimaryExams);
     }
 
     /** 3 -> "Grade 3", 102 -> "Prep 1". */

@@ -31,17 +31,6 @@ $back = (string) $this->input->get('back');
                     <input type="hidden" name="back" value="<?=html_escape($back)?>">
 
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">Exam <span class="text-red">*</span></label>
-                        <div class="col-sm-4">
-                            <select class="form-control" name="exam" id="pt-exam" required>
-                                <?php foreach ($exams as $e) { ?>
-                                    <option value="<?=html_escape($e)?>" <?=$val('exam', 'PT-1') === $e ? 'selected' : ''?>><?=html_escape($e)?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
                         <label class="col-sm-2 control-label">Grade <span class="text-red">*</span></label>
                         <div class="col-sm-4">
                             <select class="form-control" name="grade" id="pt-grade" required>
@@ -51,6 +40,19 @@ $back = (string) $this->input->get('back');
                                 <?php } ?>
                             </select>
                             <p class="help-block">Applies to every section of the grade / Pre-Primary class (A/B/C).</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Exam <span class="text-red">*</span></label>
+                        <div class="col-sm-4">
+                            <?php $selGrade = (int) $val('grade'); ?>
+                            <select class="form-control" name="exam" id="pt-exam" required <?=$selGrade ? '' : 'disabled'?>>
+                                <option value=""><?=$selGrade ? 'Select exam' : 'Select grade first'?></option>
+                                <?php if ($selGrade) { foreach (Periodictest_m::exams_for($selGrade) as $e) { ?>
+                                    <option value="<?=html_escape($e)?>" <?=$val('exam') === $e ? 'selected' : ''?>><?=html_escape($e)?></option>
+                                <?php } } ?>
+                            </select>
                         </div>
                     </div>
 
@@ -88,14 +90,18 @@ $back = (string) $this->input->get('back');
 // Nursery / Prep have Evaluation 1-4, Grades 1-10 PT-1 … Annual: show only the chosen grade's exams.
 (function () {
     var examsByGrade = <?=json_encode($examsByGrade)?>;
-    var $exam = $('#pt-exam'), $grade = $('#pt-grade');
+    var exam = document.getElementById('pt-exam'), grade = document.getElementById('pt-grade');
     function fill() {
-        var list = examsByGrade[$grade.val()] || examsByGrade[1];
-        var current = $exam.val();
-        $exam.empty();
-        $.each(list, function (i, e) { $exam.append($('<option>', {value: e, text: e, selected: e === current})); });
+        var list = examsByGrade[grade.value] || [];
+        var current = exam.value;
+        exam.innerHTML = '';
+        exam.appendChild(new Option(grade.value ? 'Select exam' : 'Select grade first', ''));
+        for (var i = 0; i < list.length; i++) {
+            exam.appendChild(new Option(list[i], list[i], false, list[i] === current));
+        }
+        exam.disabled = !grade.value;
     }
-    $grade.on('change', fill);
+    grade.addEventListener('change', fill);
     fill();
 })();
 </script>
